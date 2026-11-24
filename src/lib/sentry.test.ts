@@ -5,7 +5,7 @@ describe("scrubEvent", () => {
   it("removes tokens, cookies, bodies, auth headers and user identity", () => {
     const event = scrubEvent({
       request: {
-        url: "https://agendomx.com/restablecer?token=SECRET",
+        url: "https://agendo.mx/restablecer?token=SECRET",
         query_string: "token=SECRET",
         cookies: { "better-auth.session_token": "abc" },
         data: { phone: "+525512345678" },
@@ -13,7 +13,7 @@ describe("scrubEvent", () => {
       },
       user: { ip_address: "1.2.3.4", email: "juan@example.com" },
     });
-    expect(event.request?.url).toBe("https://agendomx.com/restablecer");
+    expect(event.request?.url).toBe("https://agendo.mx/restablecer");
     expect(event.request?.query_string).toBeUndefined();
     expect(event.request?.cookies).toBeUndefined();
     expect(event.request?.data).toBeUndefined();

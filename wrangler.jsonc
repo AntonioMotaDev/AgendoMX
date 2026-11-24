@@ -12,6 +12,9 @@
     { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx" }
   ],
   "observability": { "enabled": true },
+  // Cloudflare creates the DNS record and certificate for custom domains on deploy
+  // (the zone must be in the same Cloudflare account).
+  "routes": [{ "pattern": "agendo.mx", "custom_domain": true }],
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
@@ -32,14 +35,17 @@
     { "name": "AUTH_EMAIL_RATE_LIMITER", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
   ],
   "vars": {
-    "NEXT_PUBLIC_APP_URL": "https://agendomx.com",
-    "BETTER_AUTH_URL": "https://agendomx.com",
-    "EMAIL_FROM": "AgendoMX <citas@agendomx.com>",
+    "NEXT_PUBLIC_APP_URL": "https://agendo.mx",
+    "BETTER_AUTH_URL": "https://agendo.mx",
+    "EMAIL_FROM": "AgendoMX <citas@agendo.mx>",
+    // A DSN is a public client key by design (it ships in browser SDKs too); not a secret.
+    "SENTRY_DSN": "https://4575660e8993ba43bf1e2eb34d6e5107@o4512488147714048.ingest.us.sentry.io/4512488176746496",
     "SENTRY_ENVIRONMENT": "production"
   },
   "env": {
     "staging": {
       "name": "agendomx-staging",
+      "routes": [{ "pattern": "staging.agendo.mx", "custom_domain": true }],
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx-staging" }
       ],
@@ -59,9 +65,10 @@
         { "name": "AUTH_EMAIL_RATE_LIMITER", "namespace_id": "1006", "simple": { "limit": 5, "period": 60 } }
       ],
       "vars": {
-        "NEXT_PUBLIC_APP_URL": "https://staging.agendomx.com",
-        "BETTER_AUTH_URL": "https://staging.agendomx.com",
-        "EMAIL_FROM": "AgendoMX Staging <citas@agendomx.com>",
+        "NEXT_PUBLIC_APP_URL": "https://staging.agendo.mx",
+        "BETTER_AUTH_URL": "https://staging.agendo.mx",
+        "EMAIL_FROM": "AgendoMX Staging <citas@agendo.mx>",
+        "SENTRY_DSN": "https://4575660e8993ba43bf1e2eb34d6e5107@o4512488147714048.ingest.us.sentry.io/4512488176746496",
         "SENTRY_ENVIRONMENT": "staging"
       }
     }

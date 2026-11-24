@@ -25,7 +25,7 @@ export async function sendEmail({ to, subject, react, text }: SendEmailInput): P
     console.info(`[email:dev] to=${to} subject="${subject}"\n${text}`);
     return;
   }
-  const from = optionalEnv("EMAIL_FROM") ?? "AgendoMX <citas@agendomx.com>";
+  const from = optionalEnv("EMAIL_FROM") ?? "AgendoMX <citas@agendo.mx>";
   const html = await render(react);
   const { error } = await new Resend(apiKey).emails.send({ from, to, subject, html, text });
   if (error) throw new Error(`Resend error: ${error.name}`);
