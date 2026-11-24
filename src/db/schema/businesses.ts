@@ -31,6 +31,13 @@ export const businesses = pgTable(
     city: text("city"),
     state: text("state"),
     mapsUrl: text("maps_url"),
+    // Social profiles, stored as normalized https URLs (see src/lib/social.ts).
+    facebookUrl: text("facebook_url"),
+    instagramUrl: text("instagram_url"),
+    twitterUrl: text("twitter_url"),
+    tiktokUrl: text("tiktok_url"),
+    youtubeUrl: text("youtube_url"),
+    linkedinUrl: text("linkedin_url"),
     lat: doublePrecision("lat"),
     lng: doublePrecision("lng"),
     logoUrl: text("logo_url"),
@@ -53,6 +60,15 @@ export const businesses = pgTable(
     check("businesses_slug_format", sql`${t.slug} ~ '^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$'`),
     check("businesses_lead_time_nonneg", sql`${t.bookingLeadTimeMin} >= 0`),
     check("businesses_window_range", sql`${t.bookingWindowDays} BETWEEN 1 AND 365`),
+    check(
+      "businesses_social_https",
+      sql`(${t.facebookUrl} IS NULL OR ${t.facebookUrl} LIKE 'https://%')
+        AND (${t.instagramUrl} IS NULL OR ${t.instagramUrl} LIKE 'https://%')
+        AND (${t.twitterUrl} IS NULL OR ${t.twitterUrl} LIKE 'https://%')
+        AND (${t.tiktokUrl} IS NULL OR ${t.tiktokUrl} LIKE 'https://%')
+        AND (${t.youtubeUrl} IS NULL OR ${t.youtubeUrl} LIKE 'https://%')
+        AND (${t.linkedinUrl} IS NULL OR ${t.linkedinUrl} LIKE 'https://%')`,
+    ),
     check("businesses_pending_expiry_range", sql`${t.pendingExpiryHours} BETWEEN 1 AND 168`),
     check("businesses_cancel_hours_nonneg", sql`${t.cancellationMinHours} >= 0`),
   ],

@@ -4,14 +4,15 @@ import { getCurrentBusiness } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Hoy — AgendoMX", robots: { index: false } };
 
-// Placeholder until onboarding (Fase 2) and the agenda (Fase 4) exist.
+// Placeholder until the agenda exists (Fase 4). The layout guarantees a finished onboarding.
 export default async function TodayPage() {
   const business = await getCurrentBusiness();
   return (
     <section className="flex flex-col gap-2">
       <h1 className="text-2xl font-semibold tracking-tight">{copy.dashboard.todayTitle}</h1>
-      <p className="text-base text-ink">{business ? copy.dashboard.emptyToday : copy.dashboard.onboardingPending}</p>
-      {business ? <p className="text-base text-ink-muted">{copy.dashboard.emptyTodayHint}</p> : null}
+      <p className="text-base text-ink-muted">{business?.name}</p>
+      <p className="mt-4 text-base text-ink">{copy.dashboard.emptyToday}</p>
+      <p className="text-base text-ink-muted">{copy.dashboard.emptyTodayHint}</p>
     </section>
   );
 }
