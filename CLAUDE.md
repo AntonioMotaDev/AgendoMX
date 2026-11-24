@@ -44,7 +44,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 | Imágenes | Cloudflare R2 (logos, portadas). Compresión en el cliente antes de subir |
 | Mapa | Link "Cómo llegar" (Google Maps URL) + embed de OpenStreetMap. Sin API key de Google Maps |
 | Correo transaccional | Resend + React Email (se configura en la Fase 1: auth lo necesita) |
-| Anti-abuso | Cloudflare Turnstile + binding de Rate Limiting de Workers + honeypot |
+| Anti-abuso | Cloudflare Turnstile + rate limit en Postgres (tabla `rate_limits`) + honeypot |
 | Observabilidad | Workers Logs + Sentry (`@sentry/cloudflare`) desde la Fase 1 |
 | Tareas programadas | Cloudflare Cron Triggers (Worker aparte `workers/cron`) |
 | PWA | manifest + service worker (Serwist o manual) |
@@ -63,7 +63,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
 - Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
 - El entry del Worker es `worker.ts` (envuelve `.open-next/worker.js` con Sentry). `wrangler.jsonc` apunta a él en `main`.
-- Rate limit de auth: `src/lib/rate-limit.ts` (binding de Workers Rate Limiting, por IP y por correo). El limitador interno de Better Auth está desactivado porque es en memoria por isolate. No uses `instrumentation.ts`: el hook no carga en el bundle de OpenNext y tumba todo el servidor (500 en cada ruta). Sentry captura los `console.error` del Worker. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
+- Rate limit de auth: `src/lib/rate-limit.ts`, respaldado por Postgres (tabla `rate_limits`, upsert atómico en `src/db/rate-limit.ts`; por IP y por correo hasheado). Se probó el binding de Workers Rate Limiting en staging y **no impuso el límite** (30 intentos sin un solo 429), por eso no se usa. El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Usa el mismo mecanismo para el rate limit de la reserva pública; `BOOKING_RATE_LIMITER` queda sin uso. No uses `instrumentation.ts`: el hook no carga en el bundle de OpenNext y tumba todo el servidor (500 en cada ruta). Sentry captura los `console.error` del Worker. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
 
 ### Ambientes
 
@@ -119,6 +119,7 @@ Las tablas de auth (`user`, `session`, `account`, `verification`) las genera Bet
 - **availability_exceptions:** id, staff_id, date, start_time (nullable), end_time (nullable), type (closed | custom_hours). Para vacaciones, días festivos y horario especial.
 - **clients:** id, business_id, name, phone (E.164), email (nullable), notes_short (nullable, máx. 280 caracteres, sin datos de salud), created_at. Único por (business_id, phone).
 - **appointments:** id, business_id, staff_id, service_id, client_id, starts_at (timestamptz), ends_at (timestamptz, = starts_at + duración), blocked_until (timestamptz, = ends_at + buffer_after_min), service_name_snapshot, price_cents_snapshot (nullable), status (pending | confirmed | cancelled | completed | no_show | rejected | expired), source (public_link | manual | directory), public_token (para el link de la cita del cliente), expires_at (nullable; solo `pending`), reminder_sent_at (nullable; idempotencia del cron), cancelled_by, cancel_reason, created_at.
+- **rate_limits:** key (PK), window_start, count. Contadores de ventana fija para anti-abuso. Las claves nunca llevan correos ni teléfonos en claro.
 - **appointment_events:** id, appointment_id, type, actor (owner | client | system), note (nullable, operativa, sin datos clínicos), created_at. Registro append-only de cambios de estado.
 
 Los snapshots guardan el nombre y precio del servicio al momento de reservar, para que editar un servicio no altere citas pasadas.
@@ -174,7 +175,7 @@ Función pura y testeada. Entrada: reglas, excepciones, citas existentes (con `b
 4. Estado inicial: `confirmed` si `confirmation_mode = auto` (default); `pending` con `expires_at` si es `manual`. Una cita `pending` bloquea el horario; el cron la pasa a `expired` al vencer. Todo cambio de estado escribe en `appointment_events`.
 5. Se manda correo de confirmación al cliente (si dio correo) y aviso al dueño.
 6. El cliente recibe el link `/cita/{public_token}` para **ver y cancelar**. Cancelar solo se permite hasta `cancellation_min_hours` antes de la cita; después, se muestra el WhatsApp del negocio. Reprogramar = cancelar y volver a agendar (reprogramación nativa es post-MVP).
-7. Protección anti-abuso: rate limit por IP y por teléfono (binding de Rate Limiting), honeypot y Turnstile desde el inicio.
+7. Protección anti-abuso: rate limit por IP y por teléfono (Postgres, `hitRateLimit`), honeypot y Turnstile desde el inicio.
 
 ### Slugs
 
@@ -251,7 +252,7 @@ TURNSTILE_SECRET_KEY=
 SENTRY_DSN=              # var pública en wrangler.jsonc (un DSN no es secreto)
 SENTRY_ENVIRONMENT=      # var en wrangler.jsonc: production | staging
 NEXT_PUBLIC_APP_URL=https://agendomx.com
-# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE, BOOKING_RATE_LIMITER, AUTH_IP_RATE_LIMITER, AUTH_EMAIL_RATE_LIMITER
+# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE
 ```
 
 ## 10. Alcance del MVP

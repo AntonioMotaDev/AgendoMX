@@ -29,10 +29,7 @@
   ],
   "ratelimits": [
     // Public booking: 10 requests per minute per key (IP or phone).
-    { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
-    // Auth endpoints (src/lib/rate-limit.ts): per IP and per email.
-    { "name": "AUTH_IP_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } },
-    { "name": "AUTH_EMAIL_RATE_LIMITER", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
+    { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }
   ],
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://agendomx.com",
@@ -60,9 +57,7 @@
         { "binding": "ASSETS_BUCKET", "bucket_name": "agendomx-assets-staging" }
       ],
       "ratelimits": [
-        { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
-        { "name": "AUTH_IP_RATE_LIMITER", "namespace_id": "1005", "simple": { "limit": 20, "period": 60 } },
-        { "name": "AUTH_EMAIL_RATE_LIMITER", "namespace_id": "1006", "simple": { "limit": 5, "period": 60 } }
+        { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
       ],
       "vars": {
         "NEXT_PUBLIC_APP_URL": "https://staging.agendomx.com",

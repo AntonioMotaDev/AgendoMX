@@ -1,3 +1,7 @@
+export const AUTH_WINDOW_SECONDS = 60;
+export const AUTH_IP_LIMIT = 20;
+export const AUTH_EMAIL_LIMIT = 5;
+
 export type AuthLimitRule = { endpoint: string; byEmail: boolean };
 
 /**

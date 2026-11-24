@@ -4,3 +4,4 @@ export * from "./businesses";
 export * from "./scheduling";
 export * from "./clients";
 export * from "./appointments";
+export * from "./rate-limits";
