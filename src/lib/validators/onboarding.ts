@@ -65,28 +65,33 @@ export function parsePriceToCents(input: string): number | null | "invalid" {
 
 export const DURATION_OPTIONS_MIN = [15, 30, 45, 60, 90, 120] as const;
 
+/** Price field: "$1,200.50" → cents, empty → null (hidden). */
+export const priceSchema = z
+  .string()
+  .default("")
+  .transform((value, ctx) => {
+    const cents = parsePriceToCents(value);
+    if (cents === "invalid") {
+      ctx.addIssue({ code: "custom", message: v.priceInvalid });
+      return z.NEVER;
+    }
+    if (cents !== null && cents > MAX_PRICE_CENTS) {
+      ctx.addIssue({ code: "custom", message: v.priceTooHigh });
+      return z.NEVER;
+    }
+    return cents;
+  });
+
+export const durationSchema = z
+  .number({ error: v.durationInvalid })
+  .int(v.durationInvalid)
+  .min(5, v.durationInvalid)
+  .max(720, v.durationInvalid);
+
 export const serviceStepSchema = z.object({
   name: z.string().trim().min(1, v.serviceNameRequired).max(80, v.serviceNameLong),
-  price: z
-    .string()
-    .default("")
-    .transform((value, ctx) => {
-      const cents = parsePriceToCents(value);
-      if (cents === "invalid") {
-        ctx.addIssue({ code: "custom", message: v.priceInvalid });
-        return z.NEVER;
-      }
-      if (cents !== null && cents > MAX_PRICE_CENTS) {
-        ctx.addIssue({ code: "custom", message: v.priceTooHigh });
-        return z.NEVER;
-      }
-      return cents;
-    }),
-  durationMin: z
-    .number({ error: v.durationInvalid })
-    .int(v.durationInvalid)
-    .min(5, v.durationInvalid)
-    .max(720, v.durationInvalid),
+  price: priceSchema,
+  durationMin: durationSchema,
 });
 
 export type ServiceStepInput = z.input<typeof serviceStepSchema>;

@@ -1,4 +1,5 @@
 import { onboardingCopy } from "./onboarding";
+import { panelCopy } from "./panel";
 
 // All UI text lives here (es-MX, trato de "tú"). See CLAUDE.md §7 and docs/BRAND.md §3.
 export const copy = {
@@ -14,6 +15,7 @@ export const copy = {
   },
   tagline: "Tu negocio. Tu tiempo. En orden.",
   onboarding: onboardingCopy,
+  panel: panelCopy,
   auth: {
     common: {
       email: "Correo electrónico",

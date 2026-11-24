@@ -1,6 +1,5 @@
 "use server";
 
-import type { ZodError } from "zod";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
@@ -14,26 +13,10 @@ import {
 } from "@/lib/validators/onboarding";
 import { isSlugAvailable } from "@/server/queries/business";
 import { saveBusinessProfile, saveFirstService, saveWeeklySchedule } from "./business-writes";
+import { firstIssue, guarded } from "./helpers";
 import { fail, ok, type ActionResult } from "./result";
 
 const c = copy.onboarding;
-
-function firstIssue(error: ZodError): ActionResult<never> {
-  const issue = error.issues[0];
-  return fail(issue?.message ?? c.shell.savingError, issue?.path[0] === undefined ? undefined : String(issue.path[0]));
-}
-
-/** Unexpected failures are logged (Sentry picks up console.error) and shown generically. */
-async function guarded<T>(label: string, work: () => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
-  try {
-    return await work();
-  } catch (error) {
-    // Next's redirect()/notFound() signals must keep propagating.
-    if (typeof error === "object" && error !== null && "digest" in error) throw error;
-    console.error(`${label} failed`, error instanceof Error ? error.message : "unknown error");
-    return fail(c.shell.savingError);
-  }
-}
 
 export type SlugStatus = { state: "available" } | { state: "taken" } | { state: "invalid"; message: string };
 

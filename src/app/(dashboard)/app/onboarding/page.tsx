@@ -8,6 +8,7 @@ import { ScheduleStepForm } from "@/components/onboarding/schedule-step-form";
 import { ServiceStepForm } from "@/components/onboarding/service-step-form";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
+import { centsToInput } from "@/lib/money";
 import { MX_STATES } from "@/lib/mx-states";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
 import { getFirstService, getOnboardingState, getPrimaryStaff, getScheduleRules } from "@/server/queries/business";
@@ -16,11 +17,6 @@ import { applyPreset, rulesToSchedule, SCHEDULE_PRESETS } from "@/server/service
 export const metadata: Metadata = { title: "Configura tu negocio — AgendoMX", robots: { index: false } };
 
 const c = copy.onboarding;
-
-function centsToInput(cents: number | null): string {
-  if (cents === null) return "";
-  return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
-}
 
 export default async function OnboardingPage({ searchParams }: PageProps<"/app/onboarding">) {
   const owner = await requireOwner();
