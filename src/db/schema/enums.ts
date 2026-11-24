@@ -28,7 +28,26 @@ export const appointmentStatus = pgEnum("appointment_status", [
   "cancelled",
   "completed",
   "no_show",
+  // Manual-confirmation flow: the owner declined, or never answered in time.
+  "rejected",
+  "expired",
 ]);
+
+/** auto: bookings start as `confirmed`. manual: they start as `pending` until the owner approves. */
+export const confirmationMode = pgEnum("confirmation_mode", ["auto", "manual"]);
+
+export const appointmentEventType = pgEnum("appointment_event_type", [
+  "created",
+  "confirmed",
+  "rejected",
+  "expired",
+  "cancelled",
+  "completed",
+  "no_show",
+  "rescheduled",
+]);
+
+export const eventActor = pgEnum("event_actor", ["owner", "client", "system"]);
 
 export const appointmentSource = pgEnum("appointment_source", [
   "public_link",

@@ -40,6 +40,10 @@ export const services = pgTable(
     description: text("description"),
     durationMin: integer("duration_min").notNull(),
     priceCents: integer("price_cents"),
+    /** Show "desde $X" instead of a fixed price. */
+    priceIsFrom: boolean("price_is_from").notNull().default(false),
+    /** false = hidden from the public booking flow (owner can still book it manually). */
+    isBookableOnline: boolean("is_bookable_online").notNull().default(true),
     bufferAfterMin: integer("buffer_after_min").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),

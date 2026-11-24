@@ -59,7 +59,7 @@ describe.skipIf(!url)("appointments_no_overlap (Postgres)", () => {
     await admin.end();
   });
 
-  const appt = (startIso: string, opts: { staffId?: string; status?: "confirmed" | "cancelled" | "pending" } = {}) => {
+  const appt = (startIso: string, opts: { staffId?: string; status?: typeof schema.appointments.$inferInsert["status"] } = {}) => {
     const startsAt = new Date(startIso);
     const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
     const blockedUntil = new Date(endsAt.getTime() + 15 * 60_000);
@@ -100,6 +100,20 @@ describe.skipIf(!url)("appointments_no_overlap (Postgres)", () => {
   it("cancelled appointments do not block the slot", async () => {
     await db.insert(schema.appointments).values(appt("2026-11-24T15:00:00Z", { status: "cancelled" }));
     await expect(db.insert(schema.appointments).values(appt("2026-11-24T15:00:00Z"))).resolves.toBeDefined();
+  });
+
+  it.each(["rejected", "expired"] as const)("%s appointments do not block the slot", async (status) => {
+    await db.insert(schema.appointments).values(appt("2026-11-24T15:00:00Z", { status }));
+    await expect(db.insert(schema.appointments).values(appt("2026-11-24T15:00:00Z"))).resolves.toBeDefined();
+  });
+
+  it("pending appointments block the slot until they are rejected or expire", async () => {
+    await db.insert(schema.appointments).values(appt("2026-11-24T15:00:00Z", { status: "pending" }));
+    const err = await db
+      .insert(schema.appointments)
+      .values(appt("2026-11-24T15:00:00Z"))
+      .then(() => null, (e: unknown) => e);
+    expect(isExclusionViolation(err)).toBe(true);
   });
 
   it("different staff can be booked at the same time", async () => {

@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { businesses } from "./businesses";
 import { clients } from "./clients";
-import { appointmentSource, appointmentStatus, cancelledBy } from "./enums";
+import { appointmentEventType, appointmentSource, appointmentStatus, cancelledBy, eventActor } from "./enums";
 import { services, staff } from "./scheduling";
 
 /**
@@ -35,6 +35,8 @@ export const appointments = pgTable(
     status: appointmentStatus("status").notNull().default("confirmed"),
     source: appointmentSource("source").notNull(),
     publicToken: text("public_token").notNull().unique(),
+    /** `pending` only: when the request expires if the owner does not answer. */
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
     reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
     cancelledBy: cancelledBy("cancelled_by"),
     cancelReason: text("cancel_reason"),
@@ -43,10 +45,32 @@ export const appointments = pgTable(
   (t) => [
     index("appointments_business_starts_idx").on(t.businessId, t.startsAt),
     index("appointments_staff_starts_idx").on(t.staffId, t.startsAt),
+    index("appointments_pending_expiry_idx")
+      .on(t.expiresAt)
+      .where(sql`${t.status} = 'pending'`),
     index("appointments_reminder_due_idx")
       .on(t.startsAt)
       .where(sql`${t.reminderSentAt} IS NULL AND ${t.status} = 'confirmed'`),
     check("appointments_time_order", sql`${t.endsAt} > ${t.startsAt} AND ${t.blockedUntil} >= ${t.endsAt}`),
     check("appointments_token_len", sql`char_length(${t.publicToken}) >= 32`),
   ],
+);
+
+/**
+ * Append-only change log for an appointment. No clinical data: `note` is an
+ * operational remark only (e.g. a reschedule reason). See CLAUDE.md §1.
+ */
+export const appointmentEvents = pgTable(
+  "appointment_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => appointments.id, { onDelete: "cascade" }),
+    type: appointmentEventType("type").notNull(),
+    actor: eventActor("actor").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("appointment_events_appointment_idx").on(t.appointmentId, t.createdAt)],
 );
