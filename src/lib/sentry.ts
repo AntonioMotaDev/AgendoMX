@@ -1,4 +1,4 @@
-import type { CloudflareOptions } from "@sentry/cloudflare";
+import { captureConsoleIntegration, type CloudflareOptions } from "@sentry/cloudflare";
 
 /** Query strings carry one-time tokens (verify email, reset password): never ship them. */
 export function stripQuery(url: string): string {
@@ -46,6 +46,9 @@ export function sentryOptions(env: SentryEnv): CloudflareOptions {
     environment: env.SENTRY_ENVIRONMENT ?? "production",
     // Errors only for now; Workers Logs already covers request logs.
     tracesSampleRate: 0,
+    // Next reports render/route errors with console.error and OpenNext cannot load
+    // an instrumentation hook (onRequestError), so forward console errors instead.
+    integrations: [captureConsoleIntegration({ levels: ["error"] })],
     beforeSend: (event) => scrubEvent(event),
   };
 }

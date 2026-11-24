@@ -63,7 +63,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
 - Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
 - El entry del Worker es `worker.ts` (envuelve `.open-next/worker.js` con Sentry). `wrangler.jsonc` apunta a él en `main`.
-- Rate limit de auth: `src/lib/rate-limit.ts` (binding de Workers Rate Limiting, por IP y por correo). El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
+- Rate limit de auth: `src/lib/rate-limit.ts` (binding de Workers Rate Limiting, por IP y por correo). El limitador interno de Better Auth está desactivado porque es en memoria por isolate. No uses `instrumentation.ts`: el hook no carga en el bundle de OpenNext y tumba todo el servidor (500 en cada ruta). Sentry captura los `console.error` del Worker. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
 
 ### Ambientes
 
