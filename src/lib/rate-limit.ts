@@ -27,8 +27,6 @@ export async function limitAuthRequest(request: Request): Promise<Response | nul
     }
 
     const results = await Promise.all(checks);
-    // TEMP diagnostics (remove once the limiter is verified in production): no PII.
-    console.info("[rl-debug]", rule.endpoint, `checks=${checks.length}`, `ip=${ip === "unknown" ? "unknown" : "set"}`, JSON.stringify(results));
     if (results.every((r) => r.success)) return null;
   } catch (error) {
     console.error("auth rate limiter unavailable, failing open", error instanceof Error ? error.message : "unknown");
