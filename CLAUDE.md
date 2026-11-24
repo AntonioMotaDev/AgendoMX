@@ -215,7 +215,7 @@ Función pura y testeada. Entrada: reglas, excepciones, citas existentes (con `b
 ```bash
 pnpm dev              # desarrollo local (next dev)
 pnpm preview          # build + preview en runtime de Workers (opennextjs-cloudflare)
-pnpm deploy           # build + deploy a Cloudflare (producción)
+pnpm run deploy       # build + deploy a Cloudflare (producción). NO uses `pnpm deploy`: es un comando nativo de pnpm
 pnpm deploy:staging   # build + deploy al Worker de staging
 pnpm db:generate      # drizzle-kit generate
 pnpm db:migrate       # aplica migraciones a Neon (según DATABASE_URL)
