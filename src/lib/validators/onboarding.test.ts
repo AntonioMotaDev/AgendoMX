@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { BUSINESS_CATEGORIES } from "@/lib/categories";
+import { copy } from "@/lib/copy";
 import { businessStepSchema, parsePriceToCents, scheduleIssueMessage, serviceStepSchema, slugSchema } from "./onboarding";
 import { businessCategory } from "@/db/schema/enums";
 
 describe("categories", () => {
   it("match the database enum exactly", () => {
     expect([...BUSINESS_CATEGORIES].sort()).toEqual([...businessCategory.enumValues].sort());
+  });
+});
+
+describe("service placeholders", () => {
+  it("exist for every category, with a name and a numeric example price", () => {
+    for (const category of BUSINESS_CATEGORIES) {
+      const placeholder = copy.onboarding.service.placeholders[category];
+      expect(placeholder.name.length).toBeGreaterThan(3);
+      expect(parsePriceToCents(placeholder.price)).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -26,6 +37,18 @@ describe("businessStepSchema", () => {
   const valid = { name: " Barbería Juan ", category: "barbershop", state: "San Luis Potosí", city: " SLP ", slug: "barberia-juan" };
   it("trims and accepts a valid step", () => {
     expect(businessStepSchema.parse(valid)).toMatchObject({ name: "Barbería Juan", city: "SLP" });
+  });
+  it("requires a custom type when the category is Otro, and drops it otherwise", () => {
+    expect(businessStepSchema.safeParse({ ...valid, category: "other" }).error?.issues[0]).toMatchObject({ path: ["categoryOther"] });
+    expect(businessStepSchema.safeParse({ ...valid, category: "other", categoryOther: " x " }).success).toBe(false);
+    expect(businessStepSchema.parse({ ...valid, category: "other", categoryOther: "  Estudio de pilates " }).categoryOther).toBe("Estudio de pilates");
+    expect(businessStepSchema.safeParse({ ...valid, category: "other", categoryOther: "a".repeat(61) }).success).toBe(false);
+    // A stale value from a previous choice must not leak through.
+    expect(businessStepSchema.parse({ ...valid, category: "nails", categoryOther: "Estudio de pilates" }).categoryOther).toBeNull();
+    expect(businessStepSchema.parse(valid).categoryOther).toBeNull();
+    // The client may send null/empty for a field it does not show; the server must accept that.
+    expect(businessStepSchema.parse({ ...valid, categoryOther: null }).categoryOther).toBeNull();
+    expect(businessStepSchema.parse({ ...valid, categoryOther: "" }).categoryOther).toBeNull();
   });
   it("rejects unknown categories and states", () => {
     expect(businessStepSchema.safeParse({ ...valid, category: "hacker" }).success).toBe(false);

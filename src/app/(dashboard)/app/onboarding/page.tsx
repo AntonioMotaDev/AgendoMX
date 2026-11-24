@@ -45,7 +45,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/app/o
           publicHost={host}
           initial={
             business
-              ? { name: business.name, category: business.category, state: MX_STATES.find((s) => s === business.state), city: business.city ?? "", slug: business.slug }
+              ? { name: business.name, category: business.category, categoryOther: business.categoryOther ?? "", state: MX_STATES.find((s) => s === business.state), city: business.city ?? "", slug: business.slug }
               : {}
           }
         />
@@ -61,6 +61,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/app/o
     return (
       <OnboardingShell step={2} title={c.service.title} subtitle={c.service.subtitle}>
         <ServiceStepForm
+          category={business.category}
           initial={{ name: service?.name ?? "", price: centsToInput(service?.priceCents ?? null), durationMin: service?.durationMin ?? 30 }}
         />
       </OnboardingShell>

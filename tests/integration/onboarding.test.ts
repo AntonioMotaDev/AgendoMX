@@ -17,6 +17,7 @@ const url = process.env.DATABASE_URL_TEST;
 const businessData = (slug: string) => ({
   name: "Barbería Juan",
   category: "barbershop" as const,
+  categoryOther: null,
   state: "San Luis Potosí" as const,
   city: "SLP",
   slug,
@@ -137,6 +138,22 @@ describe.skipIf(!url)("owner setup (Postgres)", () => {
     expect(bad).toMatchObject({ ok: false, error: "invalid_schedule" });
     const owner = await getPrimaryStaff(db, businessId);
     expect(await getScheduleRules(db, owner!.id)).toHaveLength(5);
+  });
+
+  it("stores the owner's own business type for 'Otro' and clears it when they switch category", async () => {
+    const other = await saveBusinessProfile(db, juan, { ...businessData("estudio-pilates"), category: "other", categoryOther: "Estudio de pilates" });
+    expect(other.ok && other.data).toMatchObject({ category: "other", categoryOther: "Estudio de pilates" });
+    const back = await saveBusinessProfile(db, juan, businessData("estudio-pilates"));
+    expect(back.ok && back.data).toMatchObject({ category: "barbershop", categoryOther: null });
+  });
+
+  it("rejects, at the database level, a custom type on a non-'other' category or an empty one", async () => {
+    const created = await saveBusinessProfile(db, juan, businessData("barberia-juan"));
+    const businessId = created.ok ? created.data.id : "";
+    await expect(db.update(schema.businesses).set({ categoryOther: "Algo" }).where(eq(schema.businesses.id, businessId))).rejects.toThrow();
+    await expect(
+      db.update(schema.businesses).set({ category: "other", categoryOther: "x" }).where(eq(schema.businesses.id, businessId)),
+    ).rejects.toThrow();
   });
 
   it("rejects social links that are not https at the database level", async () => {

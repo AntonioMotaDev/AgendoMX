@@ -13,7 +13,13 @@ import { BUSINESS_CATEGORIES } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { MX_STATES } from "@/lib/mx-states";
 import { slugify } from "@/lib/reserved-slugs";
-import { businessStepSchema, slugSchema, type BusinessStepData, type BusinessStepInput } from "@/lib/validators/onboarding";
+import {
+  businessStepSchema,
+  CATEGORY_OTHER_MAX,
+  slugSchema,
+  type BusinessStepData,
+  type BusinessStepInput,
+} from "@/lib/validators/onboarding";
 import { checkSlugAction, saveBusinessStepAction } from "@/server/actions/onboarding";
 
 const c = copy.onboarding;
@@ -34,12 +40,14 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
     control,
     setValue,
     setError,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<BusinessStepInput, unknown, BusinessStepData>({
     resolver: zodResolver(businessStepSchema),
     defaultValues: {
       name: initial.name ?? "",
       category: initial.category,
+      categoryOther: initial.categoryOther ?? "",
       state: initial.state,
       city: initial.city ?? "",
       slug: initial.slug ?? "",
@@ -47,6 +55,7 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
   });
 
   const name = useWatch({ control, name: "name" });
+  const category = useWatch({ control, name: "category" });
   const slug = useWatch({ control, name: "slug" });
 
   useEffect(() => {
@@ -80,9 +89,10 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
         ? { kind: remote.state }
         : { kind: "checking" };
 
-  async function onSubmit(values: BusinessStepData) {
+  async function onSubmit() {
     setFormError(null);
-    const result = await saveBusinessStepAction(values);
+    // Send what the owner typed, not the parsed copy: the server validates it again from scratch.
+    const result = await saveBusinessStepAction(getValues());
     if (!result.ok) {
       if (result.error.field === "slug") {
         if (checkedSlug) setRemote({ slug: checkedSlug, state: "taken" });
@@ -122,6 +132,17 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
           </option>
         ))}
       </SelectField>
+
+      {category === "other" ? (
+        <Field
+          label={c.business.categoryOther}
+          placeholder={c.business.categoryOtherPlaceholder}
+          maxLength={CATEGORY_OTHER_MAX}
+          autoComplete="off"
+          error={errors.categoryOther?.message}
+          {...register("categoryOther")}
+        />
+      ) : null}
 
       <SelectField
         label={c.business.state}

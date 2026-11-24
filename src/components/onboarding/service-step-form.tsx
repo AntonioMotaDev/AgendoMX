@@ -8,13 +8,20 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Field } from "@/components/ui/field";
+import type { BusinessCategory } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { DURATION_OPTIONS_MIN, serviceStepSchema, type ServiceStepData, type ServiceStepInput } from "@/lib/validators/onboarding";
 import { saveServiceStepAction } from "@/server/actions/onboarding";
 
 const c = copy.onboarding;
 
-export function ServiceStepForm({ initial }: { initial: { name: string; price: string; durationMin: number } }) {
+export function ServiceStepForm({
+  initial,
+  category,
+}: {
+  initial: { name: string; price: string; durationMin: number };
+  category: BusinessCategory;
+}) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -30,6 +37,7 @@ export function ServiceStepForm({ initial }: { initial: { name: string; price: s
   });
 
   const duration = useWatch({ control, name: "durationMin" });
+  const placeholders = c.service.placeholders[category];
   // An existing service may have a duration outside the quick options; keep it selectable.
   const durations = [...new Set<number>([...DURATION_OPTIONS_MIN, initial.durationMin])].sort((a, b) => a - b);
 
@@ -46,11 +54,11 @@ export function ServiceStepForm({ initial }: { initial: { name: string; price: s
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
       {formError ? <Alert tone="error">{formError}</Alert> : null}
 
-      <Field label={c.service.name} placeholder={c.service.namePlaceholder} error={errors.name?.message} {...register("name")} />
+      <Field label={c.service.name} placeholder={placeholders.name} error={errors.name?.message} {...register("name")} />
 
       <Field
         label={c.service.price}
-        placeholder={c.service.pricePlaceholder}
+        placeholder={placeholders.price}
         hint={c.service.priceHint}
         inputMode="decimal"
         autoComplete="off"

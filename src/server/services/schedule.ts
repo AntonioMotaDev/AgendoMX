@@ -139,3 +139,57 @@ export function timeOptions(kind: "start" | "end"): string[] {
   for (let t = first; t <= last; t += TIME_STEP_MIN) options.push(formatTime(t));
   return options;
 }
+
+/** Monday to Friday: the days owners usually run on one schedule. */
+export const WORKWEEK = [1, 2, 3, 4, 5] as const;
+
+export function blocksEqual(a: readonly TimeBlock[], b: readonly TimeBlock[]): boolean {
+  return a.length === b.length && a.every((block, i) => block.start === b[i]!.start && block.end === b[i]!.end);
+}
+
+/** True when Monday to Friday all have exactly the same blocks (closed on all five counts too). */
+export function workweekIsUniform(schedule: WeeklySchedule): boolean {
+  const normalized = normalizeSchedule(schedule);
+  const monday = normalized[WORKWEEK[0]] ?? [];
+  return WORKWEEK.every((weekday) => blocksEqual(normalized[weekday] ?? [], monday));
+}
+
+/** Copies `blocks` onto each of `weekdays`. Does not mutate the input. */
+export function setWeekdays(schedule: WeeklySchedule, weekdays: readonly number[], blocks: readonly TimeBlock[]): WeeklySchedule {
+  const next: WeeklySchedule = { ...schedule };
+  for (const weekday of weekdays) next[weekday] = blocks.map((block) => ({ ...block }));
+  return next;
+}
+
+export interface ShiftSuggestion {
+  id: "morning" | "afternoon" | "full";
+  block: TimeBlock;
+}
+
+/** Quick shifts. Morning + afternoon together make the usual split shift. */
+export const SHIFT_SUGGESTIONS: readonly ShiftSuggestion[] = [
+  { id: "morning", block: { start: "09:00", end: "14:00" } },
+  { id: "afternoon", block: { start: "16:00", end: "20:00" } },
+  { id: "full", block: { start: "09:00", end: "18:00" } },
+];
+
+export function hasShift(blocks: readonly TimeBlock[], shift: TimeBlock): boolean {
+  return blocks.some((block) => block.start === shift.start && block.end === shift.end);
+}
+
+function overlaps(blocks: readonly TimeBlock[]): boolean {
+  const sorted = [...blocks].sort((a, b) => (minutes(a.start) ?? 0) - (minutes(b.start) ?? 0));
+  return sorted.some((block, i) => i > 0 && (minutes(block.start) ?? 0) < (minutes(sorted[i - 1]!.end) ?? 0));
+}
+
+/**
+ * Taps a suggested shift. A selected one is removed; otherwise it is added next
+ * to the existing blocks. If that would overlap or exceed the daily limit, the
+ * suggestion replaces the day's blocks instead, so a tap always does something sensible.
+ */
+export function toggleShift(blocks: readonly TimeBlock[], shift: TimeBlock): TimeBlock[] {
+  if (hasShift(blocks, shift)) return blocks.filter((block) => !(block.start === shift.start && block.end === shift.end)).map((b) => ({ ...b }));
+  const candidate = [...blocks.map((b) => ({ ...b })), { ...shift }];
+  if (candidate.length > MAX_BLOCKS_PER_DAY || overlaps(candidate)) return [{ ...shift }];
+  return candidate.sort((a, b) => (minutes(a.start) ?? 0) - (minutes(b.start) ?? 0));
+}

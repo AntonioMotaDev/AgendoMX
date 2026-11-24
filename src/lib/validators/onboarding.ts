@@ -24,13 +24,27 @@ export const slugSchema = z
     if (!check.ok) ctx.addIssue({ code: "custom", message: SLUG_ERROR_MESSAGES[check.reason] });
   });
 
-export const businessStepSchema = z.object({
-  name: z.string().trim().min(1, v.nameRequired).max(80, v.nameLong),
-  category: z.enum(BUSINESS_CATEGORIES, { error: v.categoryRequired }),
-  state: z.enum(MX_STATES, { error: v.stateRequired }),
-  city: z.string().trim().min(1, v.cityRequired).max(60, v.cityLong),
-  slug: slugSchema,
-});
+export const CATEGORY_OTHER_MAX = 60;
+
+export const businessStepSchema = z
+  .object({
+    name: z.string().trim().min(1, v.nameRequired).max(80, v.nameLong),
+    category: z.enum(BUSINESS_CATEGORIES, { error: v.categoryRequired }),
+    /** Only meaningful when category is "other"; ignored (and cleared) otherwise. */
+    categoryOther: z.string().trim().max(CATEGORY_OTHER_MAX, v.categoryOtherRequired).nullish(),
+    state: z.enum(MX_STATES, { error: v.stateRequired }),
+    city: z.string().trim().min(1, v.cityRequired).max(60, v.cityLong),
+    slug: slugSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.category === "other" && (data.categoryOther ?? "").length < 2) {
+      ctx.addIssue({ code: "custom", path: ["categoryOther"], message: v.categoryOtherRequired });
+    }
+  })
+  .transform((data) => ({
+    ...data,
+    categoryOther: data.category === "other" ? (data.categoryOther ?? "") : null,
+  }));
 
 export type BusinessStepInput = z.input<typeof businessStepSchema>;
 export type BusinessStepData = z.output<typeof businessStepSchema>;

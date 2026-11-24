@@ -30,7 +30,14 @@ export async function saveBusinessProfile(
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`business:${owner.id}`}))`);
 
       const [existing] = await tx.select().from(businesses).where(eq(businesses.ownerUserId, owner.id)).limit(1);
-      const values = { name: data.name, category: data.category, state: data.state, city: data.city, slug: data.slug };
+      const values = {
+        name: data.name,
+        category: data.category,
+        categoryOther: data.categoryOther,
+        state: data.state,
+        city: data.city,
+        slug: data.slug,
+      };
 
       if (existing) {
         const [updated] = await tx.update(businesses).set(values).where(eq(businesses.id, existing.id)).returning();

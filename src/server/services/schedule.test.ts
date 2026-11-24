@@ -4,8 +4,15 @@ import {
   rulesToSchedule,
   SCHEDULE_PRESETS,
   scheduleToRules,
+  setWeekdays,
+  SHIFT_SUGGESTIONS,
+  hasShift,
   timeOptions,
+  toggleShift,
   validateSchedule,
+  WORKWEEK,
+  workweekIsUniform,
+  type TimeBlock,
   type WeeklySchedule,
 } from "./schedule";
 
@@ -83,5 +90,78 @@ describe("presets and pickers", () => {
     expect(timeOptions("start").at(-1)).toBe("23:45");
     expect(timeOptions("end")[0]).toBe("05:15");
     expect(timeOptions("end").at(-1)).toBe("24:00");
+  });
+});
+
+describe("workweek helpers", () => {
+  it("detects a uniform Monday-to-Friday schedule", () => {
+    expect(workweekIsUniform(applyPreset(SCHEDULE_PRESETS[0]!))).toBe(true);
+    expect(workweekIsUniform(applyPreset(SCHEDULE_PRESETS[1]!))).toBe(true);
+    expect(workweekIsUniform({})).toBe(true);
+  });
+
+  it("is not uniform when one weekday differs or has a different split", () => {
+    const base = applyPreset(SCHEDULE_PRESETS[0]!);
+    expect(workweekIsUniform({ ...base, 3: open([["10:00", "18:00"]]) })).toBe(false);
+    expect(workweekIsUniform({ ...base, 5: [] })).toBe(false);
+    expect(workweekIsUniform({ ...base, 2: open([["09:00", "14:00"], ["16:00", "18:00"]]) })).toBe(false);
+  });
+
+  it("ignores the weekend when judging uniformity", () => {
+    expect(workweekIsUniform({ ...applyPreset(SCHEDULE_PRESETS[0]!), 6: open([["10:00", "14:00"]]) })).toBe(true);
+  });
+
+  it("setWeekdays copies the blocks to each day without sharing references or touching other days", () => {
+    const base = applyPreset(SCHEDULE_PRESETS[0]!);
+    const split = open([["09:00", "14:00"], ["16:00", "20:00"]]);
+    const next = setWeekdays({ ...base, 6: open([["10:00", "13:00"]]) }, WORKWEEK, split);
+    for (const day of WORKWEEK) expect(next[day]).toEqual(split);
+    expect(next[1]).not.toBe(next[2]);
+    expect(next[6]).toEqual(open([["10:00", "13:00"]]));
+    expect(base[1]).toEqual(open([["09:00", "18:00"]]));
+    expect(validateSchedule(next)).toEqual([]);
+  });
+});
+
+describe("toggleShift", () => {
+  const [morning, afternoon, full] = SHIFT_SUGGESTIONS.map((s) => s.block) as [TimeBlock, TimeBlock, TimeBlock];
+
+  it("morning then afternoon builds the usual split shift", () => {
+    const first = toggleShift([], morning);
+    expect(first).toEqual([morning]);
+    const second = toggleShift(first, afternoon);
+    expect(second).toEqual([morning, afternoon]);
+    expect(validateSchedule({ 1: second })).toEqual([]);
+  });
+
+  it("keeps the blocks sorted whichever order they are tapped", () => {
+    expect(toggleShift([afternoon], morning)).toEqual([morning, afternoon]);
+  });
+
+  it("tapping a selected shift removes it", () => {
+    expect(toggleShift([morning, afternoon], afternoon)).toEqual([morning]);
+    expect(toggleShift([morning], morning)).toEqual([]);
+  });
+
+  it("replaces instead of overlapping: 'full day' over a morning shift", () => {
+    expect(toggleShift([morning], full)).toEqual([full]);
+    expect(toggleShift([afternoon], full)).toEqual([full]);
+  });
+
+  it("replaces custom blocks when a third block would exceed the limit", () => {
+    const custom = open([["06:00", "08:00"], ["22:00", "23:00"]]);
+    expect(toggleShift(custom, morning)).toEqual([morning]);
+  });
+
+  it("does not mutate its input", () => {
+    const blocks = [{ ...morning }];
+    toggleShift(blocks, afternoon);
+    expect(blocks).toEqual([morning]);
+  });
+
+  it("every suggestion is valid on its own and mutually compatible where it should be", () => {
+    for (const s of SHIFT_SUGGESTIONS) expect(validateSchedule({ 1: [s.block] })).toEqual([]);
+    expect(hasShift([morning], morning)).toBe(true);
+    expect(hasShift([morning], afternoon)).toBe(false);
   });
 });

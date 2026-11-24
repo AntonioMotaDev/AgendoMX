@@ -23,6 +23,8 @@ export const businesses = pgTable(
     slug: text("slug").notNull().unique(),
     name: text("name").notNull(),
     category: businessCategory("category").notNull(),
+    /** Free-text business type, only when category = 'other'. */
+    categoryOther: text("category_other"),
     description: text("description"),
     phone: text("phone"),
     whatsapp: text("whatsapp"),
@@ -60,6 +62,10 @@ export const businesses = pgTable(
     check("businesses_slug_format", sql`${t.slug} ~ '^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$'`),
     check("businesses_lead_time_nonneg", sql`${t.bookingLeadTimeMin} >= 0`),
     check("businesses_window_range", sql`${t.bookingWindowDays} BETWEEN 1 AND 365`),
+    check(
+      "businesses_category_other",
+      sql`${t.categoryOther} IS NULL OR (${t.category} = 'other' AND char_length(${t.categoryOther}) BETWEEN 2 AND 60)`,
+    ),
     check(
       "businesses_social_https",
       sql`(${t.facebookUrl} IS NULL OR ${t.facebookUrl} LIKE 'https://%')
