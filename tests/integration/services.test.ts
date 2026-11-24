@@ -105,6 +105,15 @@ describe.skipIf(!url)("services (Postgres)", () => {
     expect((await getService(db, b, id))?.name).toBe("De Beto");
   });
 
+  it("a malformed id is just 'not found' everywhere, never a database error", async () => {
+    for (const bad of ["no-es-un-uuid", "", "1; DROP TABLE services"]) {
+      expect(await getService(db, a, bad)).toBeNull();
+      expect(await updateService(db, a, bad, data("X"))).toMatchObject({ ok: false, error: "not_found" });
+      expect(await deleteService(db, a, bad)).toMatchObject({ ok: false, error: "not_found" });
+      expect(await moveService(db, a, bad, "up")).toMatchObject({ ok: false, error: "not_found" });
+    }
+  });
+
   it("always keeps one active service: cannot hide or delete the last one", async () => {
     const first = await createService(db, a, data("Único"));
     const id = first.ok ? first.data.id : "";

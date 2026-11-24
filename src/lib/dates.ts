@@ -7,5 +7,7 @@ const longFormatter = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "
 export function displayLocalDate(date: LocalDate, long = false): string {
   const { year, month, day } = parseLocalDate(date);
   const instant = new Date(Date.UTC(year, month - 1, day, 12));
-  return (long ? longFormatter : dayFormatter).format(instant);
+  const text = (long ? longFormatter : dayFormatter).format(instant);
+  // Sentence case: only the first letter. CSS `capitalize` would also capitalize "de".
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

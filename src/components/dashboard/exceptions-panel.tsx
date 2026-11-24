@@ -110,7 +110,7 @@ export function ExceptionsPanel({ days, today }: { days: ExceptionDay[]; today: 
             return (
               <li key={day.date} className="flex items-center justify-between gap-2 py-1 pl-4 pr-1">
                 <div className="flex flex-col py-1.5">
-                  <span className="text-base font-medium capitalize text-ink">{label}</span>
+                  <span className="text-base font-medium text-ink">{label}</span>
                   <span className="text-sm text-ink-muted">{day.kind === "closed" ? t.closedDay : blocksText(day.blocks)}</span>
                 </div>
                 <button

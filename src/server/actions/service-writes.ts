@@ -1,6 +1,7 @@
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { appointments, services, staff, staffServices } from "@/db/schema";
+import { isUuid } from "@/lib/ids";
 import type { ServiceFormData } from "@/lib/validators/services";
 import type { WriteResult } from "./business-writes";
 
@@ -61,6 +62,7 @@ export async function updateService(
   serviceId: string,
   data: ServiceFormData,
 ): Promise<WriteResult<{ id: string }> | { ok: false; error: ServiceWriteError }> {
+  if (!isUuid(serviceId)) return { ok: false, error: "not_found" };
   return db.transaction(async (tx) => {
     await lockServices(tx, businessId);
     const [existing] = await tx
@@ -79,6 +81,7 @@ export async function updateService(
 
 /** Deletes a service nobody has booked. Services with history can only be hidden. */
 export async function deleteService(db: Db, businessId: string, serviceId: string): Promise<{ ok: true } | { ok: false; error: ServiceWriteError }> {
+  if (!isUuid(serviceId)) return { ok: false, error: "not_found" };
   return db.transaction(async (tx) => {
     await lockServices(tx, businessId);
     const [existing] = await tx
@@ -99,6 +102,7 @@ export async function deleteService(db: Db, businessId: string, serviceId: strin
 
 /** Moves a service one place up or down. Renumbers the whole list so ties never matter. */
 export async function moveService(db: Db, businessId: string, serviceId: string, direction: "up" | "down"): Promise<{ ok: true } | { ok: false; error: "not_found" }> {
+  if (!isUuid(serviceId)) return { ok: false, error: "not_found" };
   return db.transaction(async (tx) => {
     await lockServices(tx, businessId);
     const list = await tx
