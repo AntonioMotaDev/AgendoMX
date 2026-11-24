@@ -67,16 +67,25 @@ describe.skipIf(!url)("services (Postgres)", () => {
   });
 
   it("moves a service up and down, renumbering without ties, and ignores the edges", async () => {
-    const [x, y, z] = await Promise.all(["X", "Y", "Z"].map(async (n, i) => {
-      const r = await createService(db, a, data(n, { durationMin: 30 + i }));
-      return r.ok ? r.data.id : "";
-    }));
+    const ids: string[] = [];
+    for (const [i, name] of ["X", "Y", "Z"].entries()) {
+      const r = await createService(db, a, data(name, { durationMin: 30 + i }));
+      ids.push(r.ok ? r.data.id : "");
+    }
+    const [x, y, z] = ids;
     await moveService(db, a, z!, "up");
     expect((await listServices(db, a)).map((s) => s.name)).toEqual(["X", "Z", "Y"]);
     await moveService(db, a, x!, "up"); // already first
     await moveService(db, a, y!, "down"); // already last
     expect((await listServices(db, a)).map((s) => s.name)).toEqual(["X", "Z", "Y"]);
     expect((await listServices(db, a)).map((s) => s.sortOrder)).toEqual([0, 1, 2]);
+  });
+
+  it("simultaneous creations get distinct sort orders (the per-business lock serializes them)", async () => {
+    await Promise.all(["A1", "A2", "A3", "A4", "A5", "A6"].map((n) => createService(db, a, data(n))));
+    const orders = (await listServices(db, a)).map((s) => s.sortOrder);
+    expect(new Set(orders).size).toBe(6);
+    expect(orders).toEqual([0, 1, 2, 3, 4, 5]);
   });
 
   it("updates every field", async () => {

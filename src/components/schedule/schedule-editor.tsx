@@ -27,7 +27,7 @@ import {
 const c = copy.onboarding.schedule;
 const START_OPTIONS = timeOptions("start");
 const END_OPTIONS = timeOptions("end");
-const DEFAULT_BLOCK: TimeBlock = { start: "09:00", end: "18:00" };
+export const DEFAULT_BLOCK: TimeBlock = { start: "09:00", end: "18:00" };
 const selectClass = "min-h-11 w-full rounded-md border border-stone bg-surface px-2.5 text-base text-ink";
 
 /** "09:00" → "9:00", the way people say it. */
@@ -40,7 +40,89 @@ function nextBlock(previous: TimeBlock | undefined): TimeBlock {
   return { start: formatTime(start), end: formatTime(Math.min(start + 180, 24 * 60)) };
 }
 
-/** One row: an open/closed switch, up to two shifts, and one-tap suggested shifts. */
+/** Up to two shifts (start/end pickers), an "add shift" link and one-tap suggested shifts. */
+export function BlockEditor({
+  blocks,
+  onChange,
+  accessibleName,
+}: {
+  blocks: TimeBlock[];
+  onChange: (blocks: TimeBlock[]) => void;
+  /** Lowercase name used in control labels, e.g. "lunes a viernes". */
+  accessibleName: string;
+}) {
+  const update = (index: number, patch: Partial<TimeBlock>) => onChange(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)));
+
+  return (
+    <div className="flex flex-col gap-3">
+      {blocks.map((block, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <select
+            aria-label={`${c.from}, ${accessibleName}, turno ${index + 1}`}
+            className={selectClass}
+            value={block.start}
+            onChange={(e) => update(index, { start: e.target.value })}
+          >
+            {!START_OPTIONS.includes(block.start) ? <option value={block.start}>{block.start}</option> : null}
+            {START_OPTIONS.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+          <span className="text-sm text-ink-muted">{c.to.toLowerCase()}</span>
+          <select
+            aria-label={`${c.to}, ${accessibleName}, turno ${index + 1}`}
+            className={selectClass}
+            value={block.end}
+            onChange={(e) => update(index, { end: e.target.value })}
+          >
+            {!END_OPTIONS.includes(block.end) ? <option value={block.end}>{block.end}</option> : null}
+            {END_OPTIONS.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+          {blocks.length > 1 ? (
+            <button
+              type="button"
+              aria-label={`${c.removeBlock}, ${accessibleName}, turno ${index + 1}`}
+              onClick={() => onChange(blocks.filter((_, i) => i !== index))}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md text-ink hover:bg-ink/5"
+            >
+              <X aria-hidden="true" className="h-5 w-5" />
+            </button>
+          ) : null}
+        </div>
+      ))}
+
+      {blocks.length < MAX_BLOCKS_PER_DAY ? (
+        <button
+          type="button"
+          onClick={() => onChange([...blocks, nextBlock(blocks.at(-1))])}
+          className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-brand-ink underline underline-offset-2"
+        >
+          <Plus aria-hidden="true" className="h-4 w-4" />
+          {c.addBlock}
+        </button>
+      ) : null}
+
+      <div role="group" aria-label={`${c.shiftsLabel}, ${accessibleName}`} className="flex flex-col gap-2">
+        <span className="text-sm text-ink-muted">{c.shiftsLabel}</span>
+        <div className="flex flex-wrap gap-2">
+          {SHIFT_SUGGESTIONS.map((shift) => (
+            <ToggleChip key={shift.id} pressed={hasShift(blocks, shift.block)} onToggle={() => onChange(toggleShift(blocks, shift.block))}>
+              {c.shifts[shift.id]} {shortTime(shift.block.start)}–{shortTime(shift.block.end)}
+            </ToggleChip>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** One row: an open/closed switch plus the shift editor when open. */
 function DayRow({
   label,
   accessibleName,
@@ -49,15 +131,12 @@ function DayRow({
   onChange,
 }: {
   label: string;
-  /** Lowercase name used in control labels, e.g. "lunes a viernes". */
   accessibleName: string;
   toggleLabel: string;
   blocks: TimeBlock[];
   onChange: (blocks: TimeBlock[]) => void;
 }) {
   const open = blocks.length > 0;
-  const update = (index: number, patch: Partial<TimeBlock>) => onChange(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)));
-
   return (
     <li className="flex flex-col gap-3 px-4 py-2">
       <div className="flex items-center justify-between">
@@ -67,72 +146,9 @@ function DayRow({
           <Switch label={toggleLabel} checked={open} onCheckedChange={(on) => onChange(on ? [{ ...DEFAULT_BLOCK }] : [])} />
         </div>
       </div>
-
       {open ? (
-        <div className="flex flex-col gap-3 pb-2">
-          {blocks.map((block, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <select
-                aria-label={`${c.from}, ${accessibleName}, turno ${index + 1}`}
-                className={selectClass}
-                value={block.start}
-                onChange={(e) => update(index, { start: e.target.value })}
-              >
-                {!START_OPTIONS.includes(block.start) ? <option value={block.start}>{block.start}</option> : null}
-                {START_OPTIONS.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
-              <span className="text-sm text-ink-muted">{c.to.toLowerCase()}</span>
-              <select
-                aria-label={`${c.to}, ${accessibleName}, turno ${index + 1}`}
-                className={selectClass}
-                value={block.end}
-                onChange={(e) => update(index, { end: e.target.value })}
-              >
-                {!END_OPTIONS.includes(block.end) ? <option value={block.end}>{block.end}</option> : null}
-                {END_OPTIONS.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
-              {blocks.length > 1 ? (
-                <button
-                  type="button"
-                  aria-label={`${c.removeBlock}, ${accessibleName}, turno ${index + 1}`}
-                  onClick={() => onChange(blocks.filter((_, i) => i !== index))}
-                  className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md text-ink hover:bg-ink/5"
-                >
-                  <X aria-hidden="true" className="h-5 w-5" />
-                </button>
-              ) : null}
-            </div>
-          ))}
-
-          {blocks.length < MAX_BLOCKS_PER_DAY ? (
-            <button
-              type="button"
-              onClick={() => onChange([...blocks, nextBlock(blocks.at(-1))])}
-              className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-brand-ink underline underline-offset-2"
-            >
-              <Plus aria-hidden="true" className="h-4 w-4" />
-              {c.addBlock}
-            </button>
-          ) : null}
-
-          <div role="group" aria-label={`${c.shiftsLabel}, ${accessibleName}`} className="flex flex-col gap-2">
-            <span className="text-sm text-ink-muted">{c.shiftsLabel}</span>
-            <div className="flex flex-wrap gap-2">
-              {SHIFT_SUGGESTIONS.map((shift) => (
-                <ToggleChip key={shift.id} pressed={hasShift(blocks, shift.block)} onToggle={() => onChange(toggleShift(blocks, shift.block))}>
-                  {c.shifts[shift.id]} {shortTime(shift.block.start)}–{shortTime(shift.block.end)}
-                </ToggleChip>
-              ))}
-            </div>
-          </div>
+        <div className="pb-2">
+          <BlockEditor blocks={blocks} onChange={onChange} accessibleName={accessibleName} />
         </div>
       ) : null}
     </li>

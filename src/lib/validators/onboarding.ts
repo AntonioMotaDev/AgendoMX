@@ -26,25 +26,34 @@ export const slugSchema = z
 
 export const CATEGORY_OTHER_MAX = 60;
 
+/** Shared by onboarding and the profile screen so both validate a business the same way. */
+export const businessIdentityFields = {
+  name: z.string().trim().min(1, v.nameRequired).max(80, v.nameLong),
+  category: z.enum(BUSINESS_CATEGORIES, { error: v.categoryRequired }),
+  /** Only meaningful when category is "other"; ignored (and cleared) otherwise. */
+  categoryOther: z.string().trim().max(CATEGORY_OTHER_MAX, v.categoryOtherRequired).nullish(),
+  state: z.enum(MX_STATES, { error: v.stateRequired }),
+  city: z.string().trim().min(1, v.cityRequired).max(60, v.cityLong),
+};
+
+type CategoryShape = { category: (typeof BUSINESS_CATEGORIES)[number]; categoryOther?: string | null };
+
+/** "Otro" needs the owner's own description of the business. */
+export function requireCategoryOther(data: CategoryShape, ctx: z.RefinementCtx) {
+  if (data.category === "other" && (data.categoryOther ?? "").length < 2) {
+    ctx.addIssue({ code: "custom", path: ["categoryOther"], message: v.categoryOtherRequired });
+  }
+}
+
+/** Keeps the custom type only for "other"; a stale value from a previous choice never leaks through. */
+export function normalizeCategoryOther<T extends CategoryShape>(data: T): Omit<T, "categoryOther"> & { categoryOther: string | null } {
+  return { ...data, categoryOther: data.category === "other" ? (data.categoryOther ?? "") : null };
+}
+
 export const businessStepSchema = z
-  .object({
-    name: z.string().trim().min(1, v.nameRequired).max(80, v.nameLong),
-    category: z.enum(BUSINESS_CATEGORIES, { error: v.categoryRequired }),
-    /** Only meaningful when category is "other"; ignored (and cleared) otherwise. */
-    categoryOther: z.string().trim().max(CATEGORY_OTHER_MAX, v.categoryOtherRequired).nullish(),
-    state: z.enum(MX_STATES, { error: v.stateRequired }),
-    city: z.string().trim().min(1, v.cityRequired).max(60, v.cityLong),
-    slug: slugSchema,
-  })
-  .superRefine((data, ctx) => {
-    if (data.category === "other" && (data.categoryOther ?? "").length < 2) {
-      ctx.addIssue({ code: "custom", path: ["categoryOther"], message: v.categoryOtherRequired });
-    }
-  })
-  .transform((data) => ({
-    ...data,
-    categoryOther: data.category === "other" ? (data.categoryOther ?? "") : null,
-  }));
+  .object({ ...businessIdentityFields, slug: slugSchema })
+  .superRefine(requireCategoryOther)
+  .transform(normalizeCategoryOther);
 
 export type BusinessStepInput = z.input<typeof businessStepSchema>;
 export type BusinessStepData = z.output<typeof businessStepSchema>;

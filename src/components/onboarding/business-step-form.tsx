@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -16,23 +15,19 @@ import { slugify } from "@/lib/reserved-slugs";
 import {
   businessStepSchema,
   CATEGORY_OTHER_MAX,
-  slugSchema,
   type BusinessStepData,
   type BusinessStepInput,
 } from "@/lib/validators/onboarding";
-import { checkSlugAction, saveBusinessStepAction } from "@/server/actions/onboarding";
+import { saveBusinessStepAction } from "@/server/actions/onboarding";
+import { SlugStatus, useSlugStatus } from "./slug-status";
 
 const c = copy.onboarding;
-
-type SlugState = { kind: "idle" } | { kind: "checking" } | { kind: "available" } | { kind: "taken" } | { kind: "invalid"; message: string };
 
 export function BusinessStepForm({ initial, publicHost }: { initial: Partial<BusinessStepInput>; publicHost: string }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   // Once the owner edits the link by hand (or already has one), stop deriving it from the name.
   const [slugTouched, setSlugTouched] = useState(Boolean(initial.slug));
-  // Result of the last server availability check, tied to the slug it was for.
-  const [remote, setRemote] = useState<{ slug: string; state: "available" | "taken" } | null>(null);
 
   const {
     register,
@@ -62,32 +57,7 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
     if (!slugTouched) setValue("slug", slugify(name ?? ""));
   }, [name, slugTouched, setValue]);
 
-  // Format problems are derived right here, with no server call.
-  const localCheck = slug && slug.trim() !== "" ? slugSchema.safeParse(slug) : null;
-  const checkedSlug = localCheck?.success ? localCheck.data : null;
-
-  // Debounced availability check; state is only set once the response arrives.
-  useEffect(() => {
-    if (!checkedSlug) return;
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      const result = await checkSlugAction(checkedSlug);
-      if (cancelled || !result.ok || result.data.state === "invalid") return;
-      setRemote({ slug: checkedSlug, state: result.data.state });
-    }, 400);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [checkedSlug]);
-
-  const slugState: SlugState = !slug || slug.trim() === ""
-    ? { kind: "idle" }
-    : localCheck && !localCheck.success
-      ? { kind: "invalid", message: localCheck.error.issues[0]?.message ?? c.business.slugFormat }
-      : remote && remote.slug === checkedSlug
-        ? { kind: remote.state }
-        : { kind: "checking" };
+  const { state: slugState, markTaken } = useSlugStatus(slug);
 
   async function onSubmit() {
     setFormError(null);
@@ -95,7 +65,7 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
     const result = await saveBusinessStepAction(getValues());
     if (!result.ok) {
       if (result.error.field === "slug") {
-        if (checkedSlug) setRemote({ slug: checkedSlug, state: "taken" });
+        markTaken();
         setError("slug", { message: result.error.message });
       } else {
         setFormError(result.error.message);
@@ -199,40 +169,4 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
       </Button>
     </form>
   );
-}
-
-function SlugStatus({ state, serverError }: { state: SlugState; serverError?: string }) {
-  if (serverError) return <span className="text-danger">{serverError}</span>;
-  switch (state.kind) {
-    case "checking":
-      return (
-        <span className="inline-flex items-center gap-1.5 text-ink-muted">
-          <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-          {c.business.slugChecking}
-        </span>
-      );
-    case "available":
-      return (
-        <span className="inline-flex items-center gap-1.5 text-success">
-          <Check aria-hidden="true" className="h-4 w-4" />
-          {c.business.slugAvailable}
-        </span>
-      );
-    case "taken":
-      return (
-        <span className="inline-flex items-center gap-1.5 text-danger">
-          <X aria-hidden="true" className="h-4 w-4" />
-          {c.business.slugTaken}
-        </span>
-      );
-    case "invalid":
-      return (
-        <span className="inline-flex items-center gap-1.5 text-danger">
-          <X aria-hidden="true" className="h-4 w-4" />
-          {state.message}
-        </span>
-      );
-    default:
-      return null;
-  }
 }

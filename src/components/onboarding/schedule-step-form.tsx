@@ -8,7 +8,7 @@ import { copy } from "@/lib/copy";
 import { scheduleIssueMessage } from "@/lib/validators/onboarding";
 import { validateSchedule, type WeeklySchedule } from "@/server/services/schedule";
 import { saveScheduleStepAction } from "@/server/actions/onboarding";
-import { ScheduleEditor } from "./schedule-editor";
+import { ScheduleEditor } from "@/components/schedule/schedule-editor";
 
 const c = copy.onboarding;
 
