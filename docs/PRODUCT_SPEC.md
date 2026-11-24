@@ -21,7 +21,7 @@ Principio rector: **la tecnología organiza; el negocio conserva su personalidad
 | Temas visuales | 6 predefinidos, solo perfil público y reserva |
 | PWA | Sí, para el dueño |
 | Identidad de usuario | Una sola tabla `user`. El rol depende del contexto (dueño de un negocio, cliente de otro) |
-| URL pública | `agendo.mx/{slug}` (se mantiene corta; no `/negocio/{slug}`) |
+| URL pública | `agendomx.com/{slug}` (se mantiene corta; no `/negocio/{slug}`) |
 | Panel | `/app/...` |
 
 ## 3. Estados de una cita

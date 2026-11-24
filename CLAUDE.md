@@ -16,7 +16,7 @@ Dos tipos de usuario:
 
 El perfil público funciona como tarjeta de presentación digital: nombre, foto o logo, descripción, servicios con precio y duración, ubicación, contacto (WhatsApp, teléfono, redes) y el botón "Agendar cita".
 
-URL pública del negocio: `https://agendo.mx/{slug}` (ej. `agendo.mx/barberia-juan`).
+URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barberia-juan`).
 
 ### Principios de producto
 
@@ -67,7 +67,7 @@ URL pública del negocio: `https://agendo.mx/{slug}` (ej. `agendo.mx/barberia-ju
 
 ### Ambientes
 
-- **production:** `agendo.mx` (un solo Worker: landing en `/`, auth y panel en `/login` y `/app`, perfiles en `/{slug}`), rama `production` de Neon. Se puede separar el panel a un subdominio (`app.agendo.mx`) más adelante sin cambiar el modelo.
+- **production:** `agendomx.com` (un solo Worker: landing en `/`, auth y panel en `/login` y `/app`, perfiles en `/{slug}`), rama `production` de Neon. Se puede separar el panel a un subdominio (`app.agendomx.com`) más adelante sin cambiar el modelo.
 - **staging:** Worker de preview + rama `staging` de Neon. Todo cambio de esquema se prueba aquí antes de producción.
 - **local:** `pnpm dev` contra una rama `dev` de Neon (o Postgres local).
 
@@ -241,16 +241,16 @@ Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnp
 DATABASE_URL=            # Neon (migraciones y dev local)
 # HYPERDRIVE binding en wrangler.jsonc para producción y staging
 BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=https://agendo.mx
+BETTER_AUTH_URL=https://agendomx.com
 GOOGLE_CLIENT_ID=        # opcional en MVP
 GOOGLE_CLIENT_SECRET=    # opcional en MVP
 RESEND_API_KEY=
-EMAIL_FROM="AgendoMX <citas@agendo.mx>"
+EMAIL_FROM="AgendoMX <citas@agendomx.com>"
 TURNSTILE_SITE_KEY=      # pública
 TURNSTILE_SECRET_KEY=
 SENTRY_DSN=              # var pública en wrangler.jsonc (un DSN no es secreto)
 SENTRY_ENVIRONMENT=      # var en wrangler.jsonc: production | staging
-NEXT_PUBLIC_APP_URL=https://agendo.mx
+NEXT_PUBLIC_APP_URL=https://agendomx.com
 # Bindings: ASSETS_BUCKET (R2), HYPERDRIVE, BOOKING_RATE_LIMITER, AUTH_IP_RATE_LIMITER, AUTH_EMAIL_RATE_LIMITER
 ```
 
