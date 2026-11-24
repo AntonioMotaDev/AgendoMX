@@ -1,24 +1,53 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. Brand values come from docs/BRAND.md.
+ * AA notes: white on --brand is only 3.4:1, so primary buttons are charcoal and
+ * terracotta is used for accents; links/text on paper use --brand-ink (4.7:1+).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f2efe7;
+  --surface: #faf9f6;
+  --ink: #252724;
+  --ink-muted: #6b6a63;
+  --stone: #b7b3a8;
+  --line: #e2ded2;
+  --brand: #d76c52;
+  --brand-ink: #b5472d;
+  --danger: #b3261e;
+  --success: #2f6b3b;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-panel: 18px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-stone: var(--stone);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-panel: var(--radius-panel);
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }

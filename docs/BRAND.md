@@ -1369,3 +1369,20 @@ Una plataforma de citas simple, moderna, cálida y adaptable.
 ---
 
 *Documento vivo de marca. Versión 1.0 — Noviembre 2026. Las decisiones visuales marcadas como propuestas deben validarse antes de considerarse estándares definitivos.*
+
+---
+
+# Apéndice: tokens implementados (`src/app/globals.css`)
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--paper` | `#F2EFE7` | Fondo de página |
+| `--surface` | `#FAF9F6` | Tarjetas, inputs |
+| `--ink` | `#252724` | Texto, botón primario |
+| `--ink-muted` | `#6B6A63` | Texto secundario (4.7:1 sobre paper) |
+| `--stone` | `#B7B3A8` | Bordes de inputs |
+| `--line` | `#E2DED2` | Divisores |
+| `--brand` | `#D76C52` | Acento: logo, detalles, elementos grandes |
+| `--brand-ink` | `#B5472D` | Links y texto de acento (4.7:1 sobre paper, 5.1:1 sobre surface) |
+
+Regla de contraste: texto blanco sobre `--brand` da solo 3.4:1 (no cumple AA para texto normal). Por eso el botón primario es `--ink` con texto claro y el terracota queda como acento, no como fondo de texto pequeño. Radios: 6 / 10 / 14 / 18 px. Alto mínimo de controles: 48 px.
