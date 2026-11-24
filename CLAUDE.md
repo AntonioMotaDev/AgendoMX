@@ -57,7 +57,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - Evita trabajo pesado de CPU por request. Las consultas a BD no cuentan como CPU, el render sí.
 - No uses `export const runtime = 'edge'`: OpenNext corre en modo Node.
 - Accede a bindings (Hyperdrive, R2, Rate Limiting, variables) con `getCloudflareContext()` de `@opennextjs/cloudflare`.
-- Crea la conexión a BD por request a partir de `env.HYPERDRIVE.connectionString`. No uses un cliente global.
+- Crea la conexión a BD por request a partir de `env.HYPERDRIVE.connectionString`. No uses un cliente global. `getDb()` ya memoiza **un cliente por request** (WeakMap por `ctx` de la ejecución): llámalo cuantas veces quieras, no abras pools propios. Antes cada llamada abría un pool que nadie cerraba y agotó las conexiones de Postgres local.
 - `next/image` no optimiza en Workers por defecto: usa un loader propio o imágenes ya comprimidas.
 - **Cache Components (`cacheComponents`) está desactivado**: OpenNext para Cloudflare aún no lo soporta por completo. No lo actives ni uses `"use cache"` hasta que OpenNext lo soporte.
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
@@ -79,6 +79,8 @@ src/
     (marketing)/            # landing, precios, aviso de privacidad, términos
     (auth)/                 # login, registro, recuperar contraseña, verificar correo
     (dashboard)/app/        # panel del dueño (protegido): hoy, agenda, servicios, horarios, perfil, ajustes
+      onboarding/           # 4 pasos: negocio, servicio, horario, listo (link/QR). Paso derivado del estado en BD
+      (panel)/              # pantallas del panel; su layout exige onboarding terminado
     [slug]/                 # perfil público del negocio + flujo de reserva
     cita/[token]/           # página de la cita para el cliente: ver / cancelar
     api/auth/[...all]/      # handler de Better Auth
@@ -111,7 +113,7 @@ drizzle/                    # migraciones generadas + SQL manual
 
 Las tablas de auth (`user`, `session`, `account`, `verification`) las genera Better Auth.
 
-- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), confirmation_mode (auto | manual, default auto), pending_expiry_hours (modo manual, default 24), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
+- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), facebook_url, instagram_url, twitter_url, tiktok_url, youtube_url, linkedin_url (nullable; URLs https normalizadas con `lib/social.ts`, con CHECK en BD), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), confirmation_mode (auto | manual, default auto), pending_expiry_hours (modo manual, default 24), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
 - **staff:** id, business_id, name, avatar_url, is_active. En el MVP cada negocio tiene 1 staff, creado automáticamente con el dueño, pero el modelo ya soporta varios.
 - **services:** id, business_id, name, description, duration_min, price_cents (nullable), price_is_from (muestra "desde $X"), buffer_after_min, is_bookable_online, is_active, sort_order.
 - **staff_services:** staff_id, service_id (qué staff da qué servicio).
@@ -232,7 +234,7 @@ pnpm cf-typegen       # regenera tipos de bindings tras editar wrangler.jsonc
 pnpm lint && pnpm typecheck
 ```
 
-Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnpm test`.
+Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnpm test`. Los archivos de integración corren en serie (`fileParallelism: false`): comparten y recrean el mismo esquema. No encadenes `git push` detrás de un `grep` de resultados de test: sale 0 aunque haya fallas.
 
 `tests/integration/` **borra y recrea el esquema** de la BD de `DATABASE_URL_TEST`: apúntala solo a una base desechable (Postgres local o una rama efímera de Neon), nunca a dev, staging ni producción.
 
