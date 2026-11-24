@@ -7,10 +7,16 @@ import { getDb } from "@/db";
 import { businesses } from "@/db/schema";
 import { getAuth } from "@/lib/auth";
 
-/** Current session, or null. Memoized per request. */
+/**
+ * Current session, or null. Memoized per request.
+ * `headers()` must be read first: it opts the route into dynamic rendering, so
+ * `next build` never tries to prerender a page that needs secrets (the auth
+ * secret only exists at runtime on Workers).
+ */
 export const getSession = cache(async () => {
+  const requestHeaders = await headers();
   const auth = await getAuth();
-  return auth.api.getSession({ headers: await headers() });
+  return auth.api.getSession({ headers: requestHeaders });
 });
 
 /**
