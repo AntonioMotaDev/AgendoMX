@@ -41,6 +41,9 @@ export async function getAuth() {
         await inBackground(sendAuthEmail("verify", u, url), "verification-email");
       },
     },
+    // Better Auth's own limiter is per-isolate memory, useless on Workers.
+    // Limits live in src/lib/rate-limit.ts (Workers Rate Limiting binding).
+    rateLimit: { enabled: false },
     session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
     advanced: {
       // Workers sits behind Cloudflare: its header carries the real client IP.

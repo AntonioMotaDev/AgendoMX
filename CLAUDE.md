@@ -62,6 +62,8 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - **Cache Components (`cacheComponents`) está desactivado**: OpenNext para Cloudflare aún no lo soporta por completo. No lo actives ni uses `"use cache"` hasta que OpenNext lo soporte.
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
 - Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
+- El entry del Worker es `worker.ts` (envuelve `.open-next/worker.js` con Sentry). `wrangler.jsonc` apunta a él en `main`.
+- Rate limit de auth: `src/lib/rate-limit.ts` (binding de Workers Rate Limiting, por IP y por correo). El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
 
 ### Ambientes
 
@@ -247,8 +249,9 @@ EMAIL_FROM="AgendoMX <citas@agendomx.com>"
 TURNSTILE_SITE_KEY=      # pública
 TURNSTILE_SECRET_KEY=
 SENTRY_DSN=
+SENTRY_ENVIRONMENT=      # var en wrangler.jsonc: production | staging
 NEXT_PUBLIC_APP_URL=https://agendomx.com
-# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE, RATE_LIMITER
+# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE, BOOKING_RATE_LIMITER, AUTH_IP_RATE_LIMITER, AUTH_EMAIL_RATE_LIMITER
 ```
 
 ## 10. Alcance del MVP

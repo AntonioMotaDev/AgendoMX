@@ -24,6 +24,7 @@
     "@hookform/resolvers": "^7.0.9",
     "@opennextjs/cloudflare": "^1.20.18",
     "@react-email/components": "^1.0.12",
+    "@sentry/cloudflare": "^11.17.0",
     "better-auth": "^1.7.27",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
