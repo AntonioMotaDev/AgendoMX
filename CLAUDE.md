@@ -3,6 +3,8 @@
 Producto de FORMA/01 · "AgendoMX de FORMA/01"
 Estado: MVP en construcción · Meta: producción en 15 días (5 fases, ver sección 11)
 
+Documentos relacionados: `docs/PRODUCT_SPEC.md` (reglas de negocio, estados, post-MVP) y `docs/BRAND.md` (marca, logo, color, tipografía, temas). Si hay conflicto, el alcance lo define la sección 10 de este archivo.
+
 ## 1. Qué es AgendoMX
 
 Plataforma web (PWA) para negocios que trabajan por cita en México: barberías, salones de uñas, estilistas, fisioterapeutas, psicólogas, nutriólogos, etc.
@@ -107,14 +109,15 @@ drizzle/                    # migraciones generadas + SQL manual
 
 Las tablas de auth (`user`, `session`, `account`, `verification`) las genera Better Auth.
 
-- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
+- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), confirmation_mode (auto | manual, default auto), pending_expiry_hours (modo manual, default 24), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
 - **staff:** id, business_id, name, avatar_url, is_active. En el MVP cada negocio tiene 1 staff, creado automáticamente con el dueño, pero el modelo ya soporta varios.
-- **services:** id, business_id, name, description, duration_min, price_cents (nullable), buffer_after_min, is_active, sort_order.
+- **services:** id, business_id, name, description, duration_min, price_cents (nullable), price_is_from (muestra "desde $X"), buffer_after_min, is_bookable_online, is_active, sort_order.
 - **staff_services:** staff_id, service_id (qué staff da qué servicio).
 - **availability_rules:** id, staff_id, weekday (0–6), start_time, end_time. Horas locales del negocio. Varias filas por día para turnos partidos, ej. 9–14 y 16–20.
 - **availability_exceptions:** id, staff_id, date, start_time (nullable), end_time (nullable), type (closed | custom_hours). Para vacaciones, días festivos y horario especial.
 - **clients:** id, business_id, name, phone (E.164), email (nullable), notes_short (nullable, máx. 280 caracteres, sin datos de salud), created_at. Único por (business_id, phone).
-- **appointments:** id, business_id, staff_id, service_id, client_id, starts_at (timestamptz), ends_at (timestamptz, = starts_at + duración), blocked_until (timestamptz, = ends_at + buffer_after_min), service_name_snapshot, price_cents_snapshot (nullable), status (pending | confirmed | cancelled | completed | no_show), source (public_link | manual | directory), public_token (para el link de la cita del cliente), reminder_sent_at (nullable; idempotencia del cron), cancelled_by, cancel_reason, created_at.
+- **appointments:** id, business_id, staff_id, service_id, client_id, starts_at (timestamptz), ends_at (timestamptz, = starts_at + duración), blocked_until (timestamptz, = ends_at + buffer_after_min), service_name_snapshot, price_cents_snapshot (nullable), status (pending | confirmed | cancelled | completed | no_show | rejected | expired), source (public_link | manual | directory), public_token (para el link de la cita del cliente), expires_at (nullable; solo `pending`), reminder_sent_at (nullable; idempotencia del cron), cancelled_by, cancel_reason, created_at.
+- **appointment_events:** id, appointment_id, type, actor (owner | client | system), note (nullable, operativa, sin datos clínicos), created_at. Registro append-only de cambios de estado.
 
 Los snapshots guardan el nombre y precio del servicio al momento de reservar, para que editar un servicio no altere citas pasadas.
 
@@ -166,7 +169,7 @@ Función pura y testeada. Entrada: reglas, excepciones, citas existentes (con `b
 1. El cliente elige servicio, luego fecha, luego hora.
 2. Captura nombre, teléfono (validado como celular mexicano y normalizado a E.164 con `lib/phone.ts`) y correo opcional.
 3. La server action verifica Turnstile y rate limit, valida con Zod, recalcula disponibilidad, hace upsert del cliente por (business_id, phone) e inserta la cita en una transacción.
-4. Estado inicial: `confirmed` (configurable después para que el dueño apruebe).
+4. Estado inicial: `confirmed` si `confirmation_mode = auto` (default); `pending` con `expires_at` si es `manual`. Una cita `pending` bloquea el horario; el cron la pasa a `expired` al vencer. Todo cambio de estado escribe en `appointment_events`.
 5. Se manda correo de confirmación al cliente (si dio correo) y aviso al dueño.
 6. El cliente recibe el link `/cita/{public_token}` para **ver y cancelar**. Cancelar solo se permite hasta `cancellation_min_hours` antes de la cita; después, se muestra el WhatsApp del negocio. Reprogramar = cancelar y volver a agendar (reprogramación nativa es post-MVP).
 7. Protección anti-abuso: rate limit por IP y por teléfono (binding de Rate Limiting), honeypot y Turnstile desde el inicio.
@@ -255,6 +258,7 @@ NEXT_PUBLIC_APP_URL=https://agendomx.com
 - Registro y login del dueño (email + contraseña, verificación de correo y recuperación), onboarding guiado (negocio, servicios, horarios)
 - Perfil público con tarjeta de presentación, ubicación (link + mapa OSM), contacto y botón de agendar
 - Reserva sin cuenta, con validación de disponibilidad en el servidor y anti-abuso
+- Confirmación manual opcional por negocio (estados `rejected` y `expired`)
 - Panel: Hoy, Mañana (recordar por WhatsApp), Semana, cita manual, servicios, horarios, excepciones, perfil
 - Correos de confirmación y aviso; recordatorio por correo 24 h antes (cron) para clientes que dieron correo
 - Link de la cita para el cliente (ver y cancelar)
@@ -268,7 +272,8 @@ NEXT_PUBLIC_APP_URL=https://agendomx.com
 
 **No entra todavía (no lo implementes sin pedirlo):**
 
-- Directorio `/explorar` (se activa cuando haya ~30 negocios con perfil completo)
+- Directorio / marketplace `/explorar`, búsqueda, favoritos y cuenta de cliente (decisión confirmada: post-MVP; se activa cuando haya ~30 negocios con perfil completo)
+- Roles, invitaciones de colaboradores y membresías de negocio
 - Reprogramación nativa desde `/cita/{token}`
 - WhatsApp Business API (recordatorios automáticos). Será la primera función de pago.
 - Notificaciones push al dueño
