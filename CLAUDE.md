@@ -28,7 +28,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Next.js (última estable, App Router) + TypeScript estricto |
+| Framework | Next.js 16 (App Router) + TypeScript estricto. Lee `AGENTS.md`: las guías de esta versión están en `node_modules/next/dist/docs/` |
 | Hosting | Cloudflare Workers vía `@opennextjs/cloudflare` (plan Workers Paid) |
 | Base de datos | Neon Postgres (plan Free al inicio) |
 | Conexión BD | Cloudflare Hyperdrive + driver `postgres` (postgres.js) |
@@ -37,7 +37,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 | UI | Tailwind CSS + shadcn/ui + lucide-react |
 | Validación | Zod (compartido entre cliente y servidor) |
 | Formularios | react-hook-form + @hookform/resolvers/zod |
-| Fechas | date-fns + date-fns-tz |
+| Fechas | date-fns v4 + `@date-fns/tz` (sucesor oficial de date-fns-tz para v4) |
 | Teléfonos | `libphonenumber-js/min` (normalizar a E.164 `+52` + 10 dígitos; `+521` ya no aplica) |
 | Imágenes | Cloudflare R2 (logos, portadas). Compresión en el cliente antes de subir |
 | Mapa | Link "Cómo llegar" (Google Maps URL) + embed de OpenStreetMap. Sin API key de Google Maps |
@@ -57,6 +57,9 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - Accede a bindings (Hyperdrive, R2, Rate Limiting, variables) con `getCloudflareContext()` de `@opennextjs/cloudflare`.
 - Crea la conexión a BD por request a partir de `env.HYPERDRIVE.connectionString`. No uses un cliente global.
 - `next/image` no optimiza en Workers por defecto: usa un loader propio o imágenes ya comprimidas.
+- **Cache Components (`cacheComponents`) está desactivado**: OpenNext para Cloudflare aún no lo soporta por completo. No lo actives ni uses `"use cache"` hasta que OpenNext lo soporte.
+- Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
+- Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
 
 ### Ambientes
 
@@ -152,7 +155,10 @@ Función pura y testeada. Entrada: reglas, excepciones, citas existentes (con `b
 
 - Granularidad de slots: 15 min por defecto (configurable después).
 - Un slot es válido si `[inicio, inicio + duración + buffer)` cabe completo dentro de un bloque de disponibilidad y no choca con `[starts_at, blocked_until)` de citas `pending` o `confirmed`.
-- Respeta anticipación mínima y ventana máxima.
+- Respeta anticipación mínima y ventana máxima. La ventana va de hoy (fecha local del negocio) a hoy + `booking_window_days` − 1.
+- Excepciones: `closed` cierra el día completo (gana sobre todo). `custom_hours` **reemplaza** las reglas semanales de esa fecha (puede haber varias).
+- Los slots arrancan al inicio de cada bloque y avanzan según la granularidad. Bloques encimados o contiguos se fusionan.
+- `isSlotAvailable()` es la revalidación del servidor: el inicio pedido debe ser exactamente uno de los slots calculados.
 - Al crear la cita, el servidor vuelve a validar el slot. Nunca confíes en lo que mande el cliente.
 
 ### Flujo de reserva pública
@@ -214,12 +220,15 @@ pnpm deploy:staging   # build + deploy al Worker de staging
 pnpm db:generate      # drizzle-kit generate
 pnpm db:migrate       # aplica migraciones a Neon (según DATABASE_URL)
 pnpm db:studio        # drizzle-kit studio
-pnpm test             # vitest
+pnpm test             # vitest (unitarias; las de integración corren si existe DATABASE_URL_TEST)
 pnpm test:e2e         # playwright
+pnpm cf-typegen       # regenera tipos de bindings tras editar wrangler.jsonc
 pnpm lint && pnpm typecheck
 ```
 
 Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnpm test`.
+
+`tests/integration/` **borra y recrea el esquema** de la BD de `DATABASE_URL_TEST`: apúntala solo a una base desechable (Postgres local o una rama efímera de Neon), nunca a dev, staging ni producción.
 
 ## 9. Variables de entorno
 

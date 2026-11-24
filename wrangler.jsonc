@@ -1,0 +1,63 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agendomx",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx" }
+  ],
+  "observability": { "enabled": true },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // TODO(owner): `wrangler hyperdrive create agendomx-prod --connection-string=...`
+      "id": "00000000000000000000000000000000",
+      // Used by `next dev` / `wrangler dev`. Point it at the Neon `dev` branch.
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/agendomx_dev"
+    }
+  ],
+  "r2_buckets": [
+    // TODO(owner): `wrangler r2 bucket create agendomx-assets`
+    { "binding": "ASSETS_BUCKET", "bucket_name": "agendomx-assets" }
+  ],
+  "ratelimits": [
+    // Public booking: 10 requests per minute per key (IP or phone).
+    { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://agendomx.com",
+    "BETTER_AUTH_URL": "https://agendomx.com",
+    "EMAIL_FROM": "AgendoMX <citas@agendomx.com>"
+  },
+  "env": {
+    "staging": {
+      "name": "agendomx-staging",
+      "services": [
+        { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx-staging" }
+      ],
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          // TODO(owner): `wrangler hyperdrive create agendomx-staging --connection-string=...`
+          "id": "00000000000000000000000000000001"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "ASSETS_BUCKET", "bucket_name": "agendomx-assets-staging" }
+      ],
+      "ratelimits": [
+        { "name": "BOOKING_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+      ],
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "https://staging.agendomx.com",
+        "BETTER_AUTH_URL": "https://staging.agendomx.com",
+        "EMAIL_FROM": "AgendoMX Staging <citas@agendomx.com>"
+      }
+    }
+  }
+}
