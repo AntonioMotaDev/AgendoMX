@@ -15,8 +15,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // TODO(owner): `wrangler hyperdrive create agendomx-prod --connection-string=...`
-      "id": "00000000000000000000000000000000",
+      "id": "8131f7fa21544fde9bbefe4a868e8a61",
       // Used by `next dev` / `wrangler dev`. Point it at the Neon `dev` branch.
       "localConnectionString": "postgres://postgres:postgres@localhost:5432/agendomx_dev"
     }
@@ -43,8 +42,8 @@
       "hyperdrive": [
         {
           "binding": "HYPERDRIVE",
-          // TODO(owner): `wrangler hyperdrive create agendomx-staging --connection-string=...`
-          "id": "00000000000000000000000000000001"
+          "id": "73073355c86b4658a0f2f4442ab7ff53",
+          "localConnectionString": "postgres://postgres:postgres@localhost:5432/agendomx_dev"
         }
       ],
       "r2_buckets": [
