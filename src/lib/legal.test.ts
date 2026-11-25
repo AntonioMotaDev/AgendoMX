@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { build } from "../../scripts/legal/sync.mjs";
-import { DRAFT_MARKER, fillClientNotice, LEGAL_TEXTS, LEGAL_VERSION, termsAcceptanceError } from "./legal-content";
+import { DRAFT_MARKER, fillClientNotice, LEGAL_TEXTS, LEGAL_VERSION, missingControllerData, termsAcceptanceError } from "./legal-content";
 import { parseMarkdown } from "./markdown";
 
 const root = process.cwd();
@@ -26,6 +26,59 @@ describe("generated legal texts", () => {
   it("the short notice for the booking form names the controller placeholder and links to the notice", () => {
     expect(LEGAL_TEXTS.privacyClientsShort).toContain("{Nombre del negocio}");
     expect(LEGAL_TEXTS.privacyClientsShort).toContain("AgendoMX");
+  });
+});
+
+describe("version across documents", () => {
+  const read = (name: string) => readFileSync(join(root, "docs/legal", name), "utf8");
+
+  it("the three documents declare the same version (what a person accepts is recorded against it)", () => {
+    for (const name of ["terminos-duenos.md", "aviso-privacidad-duenos.md", "aviso-privacidad-clientes.md"]) {
+      expect(/Versión:\s*`([^`]+)`/.exec(read(name))?.[1], name).toBe(LEGAL_VERSION);
+    }
+  });
+});
+
+describe("health consent text", () => {
+  it("is a distinct, non-empty text that names the business, the data and the notice", () => {
+    const text = LEGAL_TEXTS.privacyClientsHealthConsent;
+    expect(text).toContain("{Nombre del negocio}");
+    expect(text).toContain("{slug}/privacidad");
+    expect(text.toLowerCase()).toContain("expresamente");
+    expect(text).not.toBe(LEGAL_TEXTS.privacyClientsShort);
+  });
+
+  it("is filled for the business like the other client texts", () => {
+    const business = { slug: "psico-ana", name: "Psicología Ana", address: "Juárez 1", city: "Puebla", state: "Puebla", phone: null, whatsapp: "+525512345678" };
+    const filled = fillClientNotice(LEGAL_TEXTS.privacyClientsHealthConsent, business);
+    expect(filled).toContain("Psicología Ana");
+    expect(filled).toContain("(/psico-ana/privacidad)");
+    expect(filled).not.toMatch(/\{[^}]+\}/);
+  });
+});
+
+describe("missingControllerData", () => {
+  const complete = { address: "Juárez 123", city: "Guadalajara", state: "Jalisco", phone: "+525512345678", whatsapp: null };
+
+  it("is empty when the address and one contact are registered", () => {
+    expect(missingControllerData(complete)).toEqual([]);
+    expect(missingControllerData({ ...complete, phone: null, whatsapp: "+525587654321" })).toEqual([]);
+  });
+
+  it("asks for the address when street, city or state is blank", () => {
+    expect(missingControllerData({ ...complete, address: null })).toEqual(["address"]);
+    expect(missingControllerData({ ...complete, address: "   " })).toEqual(["address"]);
+    expect(missingControllerData({ ...complete, city: null })).toEqual(["address"]);
+    expect(missingControllerData({ ...complete, state: "" })).toEqual(["address"]);
+  });
+
+  it("asks for a contact when there is neither phone nor WhatsApp", () => {
+    expect(missingControllerData({ ...complete, phone: null, whatsapp: null })).toEqual(["contact"]);
+    expect(missingControllerData({ ...complete, phone: " ", whatsapp: "" })).toEqual(["contact"]);
+  });
+
+  it("reports both at once", () => {
+    expect(missingControllerData({ address: null, city: null, state: null, phone: null, whatsapp: null })).toEqual(["address", "contact"]);
   });
 });
 

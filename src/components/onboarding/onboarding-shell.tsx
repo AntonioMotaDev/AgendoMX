@@ -50,6 +50,11 @@ export function OnboardingShell({
         {subtitle ? <p className="mt-2 text-base text-ink-muted">{subtitle}</p> : null}
       </div>
       {children}
+      {step < ONBOARDING_STEPS ? (
+        <Link href="/app/cuenta" className="inline-flex min-h-11 items-center self-center text-sm text-ink-muted underline underline-offset-4">
+          {c.shell.deleteAccount}
+        </Link>
+      ) : null}
     </div>
   );
 }

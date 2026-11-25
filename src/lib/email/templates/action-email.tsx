@@ -1,4 +1,4 @@
-import { Body, Button, Container, Head, Hr, Html, Preview, Section, Text } from "@react-email/components";
+import { Body, Button, Container, Head, Hr, Html, Link, Preview, Section, Text } from "@react-email/components";
 import { copy } from "@/lib/copy";
 
 export interface ActionEmailProps {
@@ -9,13 +9,15 @@ export interface ActionEmailProps {
   url: string;
   expires: string;
   ignore: string;
+  /** Link to the owners' privacy notice (only while the legal pages are published). */
+  privacyUrl?: string;
 }
 
 // Inline styles only: email clients ignore Tailwind/CSS variables.
 const colors = { paper: "#f2efe7", surface: "#faf9f6", ink: "#252724", muted: "#6b6a63", brand: "#d76c52" };
 
 /** Single-call-to-action transactional email (verify address, reset password). */
-export function ActionEmail({ preview, greeting, body, cta, url, expires, ignore }: ActionEmailProps) {
+export function ActionEmail({ preview, greeting, body, cta, url, expires, ignore, privacyUrl }: ActionEmailProps) {
   return (
     <Html lang="es-MX">
       <Head />
@@ -46,7 +48,17 @@ export function ActionEmail({ preview, greeting, body, cta, url, expires, ignore
           <Text style={{ margin: "0 0 4px", fontSize: 14, color: colors.muted }}>{expires}</Text>
           <Text style={{ margin: "0 0 16px", fontSize: 14, color: colors.muted }}>{ignore}</Text>
           <Hr style={{ borderColor: "#e2ded2" }} />
-          <Text style={{ margin: "12px 0 0", fontSize: 12, color: colors.muted }}>{copy.email.footer}</Text>
+          <Text style={{ margin: "12px 0 0", fontSize: 12, color: colors.muted }}>
+            {copy.email.footer}
+            {privacyUrl ? (
+              <>
+                {" · "}
+                <Link href={privacyUrl} style={{ color: colors.muted, textDecoration: "underline" }}>
+                  {copy.email.privacyNotice}
+                </Link>
+              </>
+            ) : null}
+          </Text>
         </Container>
       </Body>
     </Html>

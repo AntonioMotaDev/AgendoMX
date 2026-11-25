@@ -31,7 +31,7 @@ export interface DueReminder {
   serviceName: string;
   clientName: string;
   clientEmail: string;
-  business: { name: string; category: typeof businesses.$inferSelect["category"]; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
+  business: { name: string; slug: string; category: typeof businesses.$inferSelect["category"]; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
 }
 
 /**
@@ -75,6 +75,7 @@ export async function claimDueReminders(db: Db, now: Date, limit = REMINDER_BATC
       clientEmail: r.c.email as string,
       business: {
         name: r.b.name,
+        slug: r.b.slug,
         category: r.b.category,
         timezone: r.b.timezone,
         address: r.b.address,

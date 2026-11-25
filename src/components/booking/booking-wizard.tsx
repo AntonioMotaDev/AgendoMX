@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { CheckboxField } from "@/components/ui/checkbox-field";
 import { InlineMarkdown } from "@/components/legal/legal-document";
 import { Field } from "@/components/ui/field";
 import { copy } from "@/lib/copy";
@@ -36,6 +37,8 @@ interface Props {
   turnstileSiteKey: string | null;
   /** Short privacy notice (markdown, already naming the business as controller); null while the legal texts are not published. */
   privacyNotice?: string | null;
+  /** Express-authorization text (markdown) for health categories; null when no box is needed. */
+  healthConsentNotice?: string | null;
 }
 
 type Step = "service" | "when" | "details";
@@ -49,7 +52,7 @@ function dayParts(date: string) {
   return { weekday: weekdayFormatter.format(instant).replace(".", ""), day: d, month: monthFormatter.format(instant).replace(".", "") };
 }
 
-export function BookingWizard({ slug, businessName, services, preselectedServiceId, manualConfirmation, turnstileSiteKey, privacyNotice = null }: Props) {
+export function BookingWizard({ slug, businessName, services, preselectedServiceId, manualConfirmation, turnstileSiteKey, privacyNotice = null, healthConsentNotice = null }: Props) {
   const router = useRouter();
   const formId = useId();
   const initialService = services.find((s) => s.id === preselectedServiceId) ?? (services.length === 1 ? services[0]! : null);
@@ -67,6 +70,7 @@ export function BookingWizard({ slug, businessName, services, preselectedService
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [healthConsent, setHealthConsent] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -130,7 +134,7 @@ export function BookingWizard({ slug, businessName, services, preselectedService
 
   const slotsOfDate = days?.find((d) => d.date === date)?.slots ?? [];
   const selectedSlot = slotsOfDate.find((s) => s.start === start) ?? null;
-  const canSubmit = !submitting && start !== null && (!needsToken || token !== null);
+  const canSubmit = !submitting && start !== null && (!needsToken || token !== null) && (!healthConsentNotice || healthConsent);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -146,6 +150,7 @@ export function BookingWizard({ slug, businessName, services, preselectedService
       phone,
       email,
       website,
+      healthConsent: healthConsentNotice ? healthConsent : null,
       turnstileToken: token,
     });
     if (result.ok) {
@@ -161,7 +166,7 @@ export function BookingWizard({ slug, businessName, services, preselectedService
       setFormError(message);
       setStep("when");
       reloadSlots(serviceId);
-    } else if (field && ["name", "phone", "email"].includes(field)) {
+    } else if (field && ["name", "phone", "email", "healthConsent"].includes(field)) {
       setFieldErrors({ [field]: message });
     } else {
       setFormError(message);
@@ -368,6 +373,15 @@ export function BookingWizard({ slug, businessName, services, preselectedService
                 </p>
               ) : null}
             </>
+          ) : null}
+          {healthConsentNotice ? (
+            <CheckboxField
+              name="healthConsent"
+              checked={healthConsent}
+              onChange={(e) => setHealthConsent(e.target.checked)}
+              error={fieldErrors.healthConsent}
+              label={<InlineMarkdown text={healthConsentNotice} />}
+            />
           ) : null}
           {privacyNotice ? (
             <p className="text-xs leading-relaxed text-ink-muted">

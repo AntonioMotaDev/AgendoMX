@@ -1,4 +1,4 @@
-import { Body, Button, Container, Head, Hr, Html, Preview, Section, Text } from "@react-email/components";
+import { Body, Button, Container, Head, Hr, Html, Link, Preview, Section, Text } from "@react-email/components";
 import { copy } from "@/lib/copy";
 
 export interface BookingEmailProps {
@@ -10,13 +10,15 @@ export interface BookingEmailProps {
   cta: string;
   url: string;
   note?: string;
+  /** Link to the privacy notice (only while the legal pages are published). */
+  privacyUrl?: string;
 }
 
 // Inline styles only: email clients ignore Tailwind/CSS variables.
 const colors = { paper: "#f2efe7", surface: "#faf9f6", ink: "#252724", muted: "#6b6a63", brand: "#d76c52" };
 
 /** Transactional email about one appointment, with a detail table and a single call to action. */
-export function BookingEmail({ preview, greeting, body, details, cta, url, note }: BookingEmailProps) {
+export function BookingEmail({ preview, greeting, body, details, cta, url, note, privacyUrl }: BookingEmailProps) {
   return (
     <Html lang="es-MX">
       <Head />
@@ -46,7 +48,17 @@ export function BookingEmail({ preview, greeting, body, details, cta, url, note 
           </Section>
           {note ? <Text style={{ margin: "0 0 16px", fontSize: 14, color: colors.muted }}>{note}</Text> : null}
           <Hr style={{ borderColor: "#e2ded2" }} />
-          <Text style={{ margin: "12px 0 0", fontSize: 12, color: colors.muted }}>{copy.email.footer}</Text>
+          <Text style={{ margin: "12px 0 0", fontSize: 12, color: colors.muted }}>
+            {copy.email.footer}
+            {privacyUrl ? (
+              <>
+                {" · "}
+                <Link href={privacyUrl} style={{ color: colors.muted, textDecoration: "underline" }}>
+                  {copy.email.privacyNotice}
+                </Link>
+              </>
+            ) : null}
+          </Text>
         </Container>
       </Body>
     </Html>

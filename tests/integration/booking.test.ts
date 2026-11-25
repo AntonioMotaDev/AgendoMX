@@ -84,6 +84,59 @@ describe.skipIf(!url)("public booking (Postgres)", () => {
     expect(events.map((e) => [e.type, e.actor])).toEqual([["created", "client"]]);
   });
 
+  describe("evidence of the privacy notice", () => {
+    it("is empty when the legal texts are not published (no consent argument)", async () => {
+      const r = await book(TEN);
+      expect(r.ok).toBe(true);
+      const [row] = await db.select().from(schema.appointments);
+      expect(row?.privacyNoticeVersion).toBeNull();
+      expect(row?.healthConsentAt).toBeNull();
+    });
+
+    it("stores the notice version, and the authorization time for health categories", async () => {
+      const consentAt = new Date("2026-12-01T12:00:00Z");
+      const r = await createPublicBooking(db, business, {
+        serviceId,
+        start: TEN,
+        client: person(1),
+        now: NOW,
+        consent: { privacyNoticeVersion: "0.2-borrador", healthConsentAt: consentAt },
+      });
+      expect(r.ok).toBe(true);
+      const [row] = await db.select().from(schema.appointments);
+      expect(row?.privacyNoticeVersion).toBe("0.2-borrador");
+      expect(row?.healthConsentAt?.toISOString()).toBe(consentAt.toISOString());
+    });
+
+    it("stores only the version for businesses that need no authorization", async () => {
+      const r = await createPublicBooking(db, business, {
+        serviceId,
+        start: TEN,
+        client: person(1),
+        now: NOW,
+        consent: { privacyNoticeVersion: "0.2-borrador", healthConsentAt: null },
+      });
+      expect(r.ok).toBe(true);
+      const [row] = await db.select().from(schema.appointments);
+      expect(row?.privacyNoticeVersion).toBe("0.2-borrador");
+      expect(row?.healthConsentAt).toBeNull();
+    });
+
+    it("the database refuses a consent time without the notice version it refers to", async () => {
+      const r = await book(TEN);
+      expect(r.ok).toBe(true);
+      await expect(admin.unsafe("UPDATE appointments SET health_consent_at = now(), privacy_notice_version = NULL")).rejects.toMatchObject({ constraint_name: "appointments_consent_has_notice" });
+    });
+
+    it("owner-made appointments carry no evidence (the owner is the controller for those)", async () => {
+      const r = await createManualAppointment(db, business, { serviceId, start: TEN, client: person(1), now: NOW, offHours: false });
+      expect(r.ok).toBe(true);
+      const [row] = await db.select().from(schema.appointments);
+      expect(row?.privacyNoticeVersion).toBeNull();
+      expect(row?.healthConsentAt).toBeNull();
+    });
+  });
+
   it("manual mode creates a pending request that still blocks the slot", async () => {
     await db.update(schema.businesses).set({ confirmationMode: "manual", pendingExpiryHours: 12 }).where(eq(schema.businesses.id, business.id));
     business = { ...business, confirmationMode: "manual", pendingExpiryHours: 12 };

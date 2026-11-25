@@ -20,6 +20,31 @@ export async function resetBookings() {
   await withDb((sql) => sql`TRUNCATE appointment_events, appointments, clients, rate_limits CASCADE`);
 }
 
+/**
+ * Removes an owner a test created (with their business and everything under it), so the global
+ * fixtures stay exactly the two seeded owners. Order matters: appointments and staff use RESTRICT.
+ */
+export async function removeOwner(email: string) {
+  await withDb(async (sql) => {
+    const [owner] = await sql<{ id: string }[]>`select id from "user" where email = ${email}`;
+    if (!owner) return;
+    await sql.begin(async (tx) => {
+      await tx`delete from appointments where business_id in (select id from businesses where owner_user_id = ${owner.id})`;
+      await tx`delete from clients where business_id in (select id from businesses where owner_user_id = ${owner.id})`;
+      await tx`delete from staff_services where staff_id in (select s.id from staff s join businesses b on b.id = s.business_id where b.owner_user_id = ${owner.id})`;
+      await tx`delete from availability_rules where staff_id in (select s.id from staff s join businesses b on b.id = s.business_id where b.owner_user_id = ${owner.id})`;
+      await tx`delete from availability_exceptions where staff_id in (select s.id from staff s join businesses b on b.id = s.business_id where b.owner_user_id = ${owner.id})`;
+      await tx`delete from services where business_id in (select id from businesses where owner_user_id = ${owner.id})`;
+      await tx`delete from staff where business_id in (select id from businesses where owner_user_id = ${owner.id})`;
+      await tx`delete from businesses where owner_user_id = ${owner.id}`;
+      await tx`delete from session where user_id = ${owner.id}`;
+      await tx`delete from account where user_id = ${owner.id}`;
+      await tx`delete from verification where identifier = ${email}`;
+      await tx`delete from "user" where id = ${owner.id}`;
+    });
+  });
+}
+
 export async function appointmentsOf(slug: string) {
   return withDb(
     (sql) => sql<{ id: string; status: string; source: string; token: string; startsAt: Date; clientName: string; clientEmail: string | null }[]>`

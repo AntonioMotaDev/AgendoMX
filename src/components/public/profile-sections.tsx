@@ -36,7 +36,31 @@ export function ProfileHero({ business }: { business: PublicBusiness }) {
   );
 }
 
-export function ServicesSection({ slug, services }: { slug: string; services: PublicService[] }) {
+function ServiceRowContent({ service: s }: { service: PublicService }) {
+  return (
+    <>
+      <span className="min-w-0">
+        <span className="block text-base font-semibold text-ink">{s.name}</span>
+        <span className="mt-0.5 flex items-center gap-1 text-sm text-ink-muted">
+          <Clock aria-hidden="true" className="h-3.5 w-3.5" />
+          {t.minutes(s.durationMin)}
+        </span>
+        {s.description ? <span className="mt-1 block text-sm text-ink-muted">{s.description}</span> : null}
+      </span>
+      {s.priceCents !== null ? (
+        <span className="shrink-0 text-base font-semibold text-ink">
+          {s.priceIsFrom ? `${t.from} ` : ""}
+          {formatMxnShort(s.priceCents)}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+const SERVICE_ROW = "flex min-h-14 items-center justify-between gap-3 rounded-lg border border-line bg-surface p-4";
+
+/** `bookable=false` lists the services without links to the booking flow (the business cannot take online bookings yet). */
+export function ServicesSection({ slug, services, bookable = true }: { slug: string; services: PublicService[]; bookable?: boolean }) {
   return (
     <section aria-labelledby="services-title" className="flex flex-col gap-3">
       <h2 id="services-title" className="text-lg font-semibold text-ink">
@@ -48,25 +72,15 @@ export function ServicesSection({ slug, services }: { slug: string; services: Pu
         <ul className="flex flex-col gap-2">
           {services.map((s) => (
             <li key={s.id}>
-              <Link
-                href={`/${slug}/reservar?servicio=${s.id}`}
-                className="flex min-h-14 items-center justify-between gap-3 rounded-lg border border-line bg-surface p-4 hover:bg-paper"
-              >
-                <span className="min-w-0">
-                  <span className="block text-base font-semibold text-ink">{s.name}</span>
-                  <span className="mt-0.5 flex items-center gap-1 text-sm text-ink-muted">
-                    <Clock aria-hidden="true" className="h-3.5 w-3.5" />
-                    {t.minutes(s.durationMin)}
-                  </span>
-                  {s.description ? <span className="mt-1 block text-sm text-ink-muted">{s.description}</span> : null}
-                </span>
-                {s.priceCents !== null ? (
-                  <span className="shrink-0 text-base font-semibold text-ink">
-                    {s.priceIsFrom ? `${t.from} ` : ""}
-                    {formatMxnShort(s.priceCents)}
-                  </span>
-                ) : null}
-              </Link>
+              {bookable ? (
+                <Link href={`/${slug}/reservar?servicio=${s.id}`} className={`${SERVICE_ROW} hover:bg-paper`}>
+                  <ServiceRowContent service={s} />
+                </Link>
+              ) : (
+                <div className={SERVICE_ROW}>
+                  <ServiceRowContent service={s} />
+                </div>
+              )}
             </li>
           ))}
         </ul>

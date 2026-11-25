@@ -18,6 +18,7 @@ export const publicCopy = {
       hours === 0 ? "Puedes cancelar tu cita hasta la hora de inicio." : `Puedes cancelar sin problema hasta ${hours} ${hours === 1 ? "hora" : "horas"} antes.`,
     powered: "AgendoMX de FORMA/01",
     privacyLink: "Aviso de privacidad",
+    bookingClosed: "Este negocio todavía no recibe reservas en línea. Contáctalo directamente para agendar.",
     whatsappGreeting: (business: string) => `Hola, vi tu perfil de ${business} en AgendoMX.`,
   },
   booking: {
@@ -56,6 +57,8 @@ export const publicCopy = {
       rateLimited: "Hiciste muchos intentos. Espera un momento e inténtalo otra vez.",
       captcha: "No pudimos verificar que eres una persona. Recarga la página e intenta de nuevo.",
       unavailable: "Las reservas no están disponibles por ahora. Intenta de nuevo en unos minutos.",
+      bookingClosed: "Este negocio todavía no recibe reservas en línea. Contáctalo directamente para agendar.",
+      consentRequired: "Para agendar con este negocio necesitamos tu autorización. Marca la casilla para continuar.",
       generic: "No pudimos agendar tu cita. Intenta de nuevo.",
     },
   },

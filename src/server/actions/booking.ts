@@ -6,6 +6,8 @@ import { hitRateLimit } from "@/db/rate-limit";
 import { sha256Hex } from "@/lib/auth-rate-limit";
 import { copy } from "@/lib/copy";
 import { formatInstantTime } from "@/lib/dates";
+import { legalPublished } from "@/lib/legal";
+import { LEGAL_VERSION } from "@/lib/legal-content";
 import { inBackground } from "@/lib/email/send";
 import { sendClientBookingEmail, sendOwnerBookingEmail } from "@/lib/email/booking-emails";
 import { verifyTurnstile } from "@/lib/turnstile";
@@ -13,7 +15,7 @@ import { turnstileConfig } from "@/lib/turnstile-config";
 import { availabilityRequestSchema, bookingRequestSchema, cancelRequestSchema } from "@/lib/validators/booking";
 import { getAppointmentByToken, getBookableService, getBookingBusinessBySlug, getOwnerContact, loadAvailabilityContext } from "@/server/queries/public";
 import { computeAvailability } from "@/server/services/availability";
-import { isPublicToken, parseRequestedStart } from "@/server/services/booking";
+import { isPublicToken, parseRequestedStart, publicBookingRequirements } from "@/server/services/booking";
 import { cancelByClient, createPublicBooking } from "./booking-writes";
 import { firstIssue } from "./helpers";
 import { fail, ok, type ActionResult } from "./result";
@@ -126,11 +128,20 @@ export async function createBookingAction(raw: unknown): Promise<ActionResult<{ 
     const business = await getBookingBusinessBySlug(db, input.slug);
     if (!business) return fail(t.errors.notFound);
 
+    // While the legal texts are published: the client notice must be able to name its controller, and
+    // health categories need the express authorization. Both are enforced here, not only in the form.
+    const published = legalPublished();
+    const requirements = publicBookingRequirements(published, business);
+    if (requirements.closed) return fail(t.errors.bookingClosed);
+    if (requirements.needsHealthConsent && input.healthConsent !== true) return fail(t.errors.consentRequired, "healthConsent");
+
+    const now = new Date();
     const result = await createPublicBooking(db, business, {
       serviceId: input.serviceId,
       start,
       client: { name: input.name, phone: input.phone, email: input.email },
-      now: new Date(),
+      now,
+      consent: published ? { privacyNoticeVersion: LEGAL_VERSION, healthConsentAt: requirements.needsHealthConsent ? now : null } : null,
     });
     if (!result.ok) {
       if (result.error === "slot_taken") return fail(t.errors.slotTaken, "start");

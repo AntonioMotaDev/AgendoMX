@@ -8,6 +8,7 @@ import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
 import { legalPublished } from "@/lib/legal";
 import { getPublicBusinessBySlug, listPublicServices } from "@/server/queries/public";
+import { publicBookingRequirements } from "@/server/services/booking";
 
 const t = copy.public.profile;
 
@@ -47,12 +48,15 @@ export default async function PublicProfilePage({ params }: PageProps<"/[slug]">
   const business = await load(slug);
   if (!business) notFound();
 
-  const canBook = business.services.length > 0;
+  // While the legal texts are published, a business without address and contact cannot take online bookings.
+  const identityMissing = publicBookingRequirements(legalPublished(), business).closed;
+  const canBook = business.services.length > 0 && !identityMissing;
   return (
     <main className="flex-1 pb-28">
       <ProfileHero business={business} />
       <div className="mx-auto mt-8 flex max-w-2xl flex-col gap-8 px-4">
-        <ServicesSection slug={business.slug} services={business.services} />
+        {identityMissing ? <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink">{t.bookingClosed}</p> : null}
+        <ServicesSection slug={business.slug} services={business.services} bookable={!identityMissing} />
         <LocationSection business={business} />
         <ContactSection business={business} />
         <p className="text-sm text-ink-muted">{t.cancellation(business.cancellationMinHours)}</p>

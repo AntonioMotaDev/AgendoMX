@@ -10,7 +10,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db";
 import * as schema from "@/db/schema";
-import { deleteOwnerAccount, getAccountSummary } from "@/server/actions/account-writes";
+import { deleteOwnerAccount, getAccountSummary, recordTermsAcceptance } from "@/server/actions/account-writes";
 import type { ImageBucket } from "@/server/actions/media-writes";
 import { generatePublicToken } from "@/lib/tokens";
 
@@ -135,5 +135,30 @@ describe.skipIf(!url)("account deletion (Postgres)", () => {
     const failing: ImageBucket = { put: async () => undefined, delete: async () => Promise.reject(new Error("R2 down")) };
     expect((await deleteOwnerAccount(db, failing, "u1")).ok).toBe(true);
     expect(await db.select().from(schema.user).where(eq(schema.user.id, "u1"))).toHaveLength(0);
+  });
+
+  describe("terms acceptance (new-version gate)", () => {
+    it("stores the accepted version and the time, only for that owner", async () => {
+      await seedOwner("u1", "negocio-uno");
+      await seedOwner("u2", "negocio-dos");
+      expect(await recordTermsAcceptance(db, "u1", "0.2-borrador", NOW)).toBe(true);
+      const [one] = await db.select().from(schema.user).where(eq(schema.user.id, "u1"));
+      const [two] = await db.select().from(schema.user).where(eq(schema.user.id, "u2"));
+      expect(one?.termsVersion).toBe("0.2-borrador");
+      expect(one?.termsAcceptedAt?.toISOString()).toBe(NOW.toISOString());
+      expect(two?.termsVersion).toBeNull();
+    });
+
+    it("replaces an older accepted version", async () => {
+      await seedOwner("u1", "negocio-uno");
+      await recordTermsAcceptance(db, "u1", "0.1-borrador", NOW);
+      await recordTermsAcceptance(db, "u1", "0.2-borrador", new Date(NOW.getTime() + 1000));
+      const [row] = await db.select().from(schema.user).where(eq(schema.user.id, "u1"));
+      expect(row?.termsVersion).toBe("0.2-borrador");
+    });
+
+    it("reports false for an unknown user", async () => {
+      expect(await recordTermsAcceptance(db, "nobody", "0.2-borrador", NOW)).toBe(false);
+    });
   });
 });

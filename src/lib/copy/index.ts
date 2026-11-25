@@ -111,6 +111,7 @@ export const copy = {
       expires: "El enlace es válido por 1 hora.",
     },
     footer: "AgendoMX de FORMA/01",
+    privacyNotice: "Aviso de privacidad",
   },
   pwa: {
     name: "AgendoMX",

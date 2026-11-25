@@ -25,23 +25,36 @@ export function build() {
   const clients = read("aviso-privacidad-clientes.md");
   const terms = read("terminos-duenos.md");
 
-  const version = /Versión:\s*`([^`]+)`/.exec(terms)?.[1];
-  if (!version) throw new Error('terminos-duenos.md must declare "Versión: `x.y`"');
+  // One version for the three documents: what a person accepts is recorded against it.
+  const versionOf = (name, text) => {
+    const found = /Versión:\s*`([^`]+)`/.exec(text)?.[1];
+    if (!found) throw new Error(`${name} must declare "Versión: \`x.y\`"`);
+    return found;
+  };
+  const version = versionOf("terminos-duenos.md", terms);
+  for (const [name, text] of [["aviso-privacidad-duenos.md", owners], ["aviso-privacidad-clientes.md", clients]]) {
+    if (versionOf(name, text) !== version) throw new Error(`${name} declares a different version than terminos-duenos.md (${version})`);
+  }
 
   // The short notice is the blockquote under "## A."; the page shows B (integral) and C (conditions).
   const shortBlock = section(clients, "A. Versión corta (se muestra en el formulario de reserva, junto al botón \"Confirmar cita\")");
-  const short = shortBlock
-    .split("\n")
-    .filter((line) => line.startsWith(">"))
-    .map((line) => line.replace(/^>\s?/, ""))
-    .join(" ")
-    .trim();
+  const quoted = (block) =>
+    block
+      .split("\n")
+      .filter((line) => line.startsWith(">"))
+      .map((line) => line.replace(/^>\s?/, ""))
+      .join(" ")
+      .trim();
+  const short = quoted(shortBlock);
+  // The checkbox text shown only for health categories (blockquote under "## A2.").
+  const healthConsent = quoted(section(clients, "A2. Casilla de autorización (solo negocios de salud: psicología, fisioterapia, nutrición, odontología y consulta médica)"));
 
   const docs = {
     version,
     privacyOwners: owners.trim(),
     terms: terms.trim(),
     privacyClientsShort: short,
+    privacyClientsHealthConsent: healthConsent,
     privacyClientsFull: `${section(clients, "B. Versión integral")}\n\n## Condiciones de la reserva\n\n${section(clients, "C. Condiciones de la reserva (texto breve para la página de la cita o pie del perfil)")}`.trim(),
   };
 

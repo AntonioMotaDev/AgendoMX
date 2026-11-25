@@ -1,8 +1,8 @@
-import { privacyClientsFull, privacyClientsShort, privacyOwners, terms, version } from "@/content/legal/generated";
+import { privacyClientsFull, privacyClientsHealthConsent, privacyClientsShort, privacyOwners, terms, version } from "@/content/legal/generated";
 
 /** Pure helpers over the generated legal texts (no env, no I/O): safe to unit-test and to import anywhere. */
 export const LEGAL_VERSION = version;
-export const LEGAL_TEXTS = { privacyOwners, terms, privacyClientsShort, privacyClientsFull } as const;
+export const LEGAL_TEXTS = { privacyOwners, terms, privacyClientsShort, privacyClientsHealthConsent, privacyClientsFull } as const;
 
 export interface BusinessIdentity {
   slug: string;
@@ -16,9 +16,22 @@ export interface BusinessIdentity {
 
 const PLACEHOLDERS = {
   name: ["{Nombre del negocio}", "{Nombre / razón social del negocio}"],
-  address: ["{domicilio del negocio, si lo registró}"],
+  address: ["{domicilio del negocio}"],
   contact: ["{teléfono / WhatsApp del negocio}"],
 } as const;
+
+/**
+ * The data the client notice must show about its controller (the business). While the legal texts are
+ * published, a business without them cannot take online bookings: the notice would be incomplete.
+ * Returns what is missing; empty means complete.
+ */
+export function missingControllerData(business: Pick<BusinessIdentity, "address" | "city" | "state" | "phone" | "whatsapp">): Array<"address" | "contact"> {
+  const filled = (value: string | null) => value !== null && value.trim() !== "";
+  const missing: Array<"address" | "contact"> = [];
+  if (!filled(business.address) || !filled(business.city) || !filled(business.state)) missing.push("address");
+  if (!filled(business.phone) && !filled(business.whatsapp)) missing.push("contact");
+  return missing;
+}
 
 /** "55 1234 5678" for "+525512345678"; anything else is returned as stored. */
 function prettyPhone(e164: string): string {

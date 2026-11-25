@@ -8,6 +8,7 @@ export const onboardingCopy = {
     savingError: "No pudimos guardar los cambios. Intenta de nuevo.",
     saving: "Guardando…",
     next: "Continuar",
+    deleteAccount: "Eliminar mi cuenta",
   },
   categories: {
     barbershop: "Barbería",

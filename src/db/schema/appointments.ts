@@ -38,6 +38,10 @@ export const appointments = pgTable(
     /** `pending` only: when the request expires if the owner does not answer. */
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    /** Public bookings made while the legal texts are published: the version of the privacy notice the client was shown. */
+    privacyNoticeVersion: text("privacy_notice_version"),
+    /** Health categories only: when the client ticked the express-authorization box (evidence for the business, the data controller). */
+    healthConsentAt: timestamp("health_consent_at", { withTimezone: true }),
     cancelledBy: cancelledBy("cancelled_by"),
     cancelReason: text("cancel_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -53,6 +57,7 @@ export const appointments = pgTable(
       .where(sql`${t.reminderSentAt} IS NULL AND ${t.status} = 'confirmed'`),
     check("appointments_time_order", sql`${t.endsAt} > ${t.startsAt} AND ${t.blockedUntil} >= ${t.endsAt}`),
     check("appointments_token_len", sql`char_length(${t.publicToken}) >= 32`),
+    check("appointments_consent_has_notice", sql`${t.healthConsentAt} IS NULL OR ${t.privacyNoticeVersion} IS NOT NULL`),
   ],
 );
 

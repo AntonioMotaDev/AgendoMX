@@ -7,6 +7,7 @@ import {
   isPublicToken,
   isSensitiveCategory,
   parseRequestedStart,
+  publicBookingRequirements,
 } from "./booking";
 import { generatePublicToken } from "@/lib/tokens";
 
@@ -90,6 +91,33 @@ describe("parseRequestedStart", () => {
       "2026-12-01T16:15:00.500Z", "2026-13-01T16:15:00.000Z", "2026-02-30T16:15:00.000Z", "2026-12-01T25:15:00.000Z",
       "mañana", "", null, undefined, 1795000000000, {},
     ]) expect(parseRequestedStart(bad)).toBeNull();
+  });
+});
+
+describe("publicBookingRequirements", () => {
+  const complete = { category: "barbershop" as const, address: "Juárez 123", city: "Puebla", state: "Puebla", phone: null, whatsapp: "+525512345678" };
+
+  it("asks nothing while the legal texts are not published, whatever the business looks like", () => {
+    const bare = { category: "psychology" as const, address: null, city: null, state: null, phone: null, whatsapp: null };
+    expect(publicBookingRequirements(false, bare)).toEqual({ closed: false, missing: [], needsHealthConsent: false });
+  });
+
+  it("a complete general business is open and needs no authorization box", () => {
+    expect(publicBookingRequirements(true, complete)).toEqual({ closed: false, missing: [], needsHealthConsent: false });
+  });
+
+  it("each health category needs the authorization box", () => {
+    for (const category of ["physiotherapy", "psychology", "nutrition", "dentistry", "medical"] as const) {
+      expect(publicBookingRequirements(true, { ...complete, category }).needsHealthConsent, category).toBe(true);
+    }
+    for (const category of ["barbershop", "beauty_salon", "nails", "spa", "fitness", "tattoo", "other"] as const) {
+      expect(publicBookingRequirements(true, { ...complete, category }).needsHealthConsent, category).toBe(false);
+    }
+  });
+
+  it("a business without address or contact is closed to online bookings and says what is missing", () => {
+    expect(publicBookingRequirements(true, { ...complete, address: null })).toMatchObject({ closed: true, missing: ["address"] });
+    expect(publicBookingRequirements(true, { ...complete, whatsapp: null })).toMatchObject({ closed: true, missing: ["contact"] });
   });
 });
 

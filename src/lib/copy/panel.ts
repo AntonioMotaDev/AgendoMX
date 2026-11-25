@@ -1,5 +1,32 @@
 // Owner panel copy (es-MX, "tú"). Tone: docs/BRAND.md §3.
 export const panelCopy = {
+  legal: {
+    // Shown while the legal texts are published and the owner has not accepted the current version.
+    gate: {
+      title: "Actualizamos nuestros términos y aviso de privacidad",
+      body: "Para seguir usando tu panel necesitamos que aceptes la versión vigente.",
+      accept: "Acepto",
+      submit: "Continuar",
+      submitting: "Guardando…",
+      required: "Marca la casilla para continuar.",
+      error: "No pudimos guardar tu aceptación. Intenta de nuevo.",
+      outdated: "Hay una versión más nueva. Recarga la página e inténtalo de nuevo.",
+      refuseTitle: "¿No estás de acuerdo?",
+      refuseBody: "Puedes cerrar sesión o eliminar tu cuenta y tus datos.",
+    },
+    // Banner of the panel when the business lacks the data its clients' privacy notice must show.
+    missing: {
+      title: "Completa tus datos para recibir reservas en línea",
+      body: (missing: ReadonlyArray<"address" | "contact">) => {
+        const parts = [
+          ...(missing.includes("address") ? ["el domicilio del negocio (calle y número, ciudad y estado)"] : []),
+          ...(missing.includes("contact") ? ["un teléfono o WhatsApp"] : []),
+        ];
+        return `Tu perfil no recibe reservas hasta que registres ${parts.join(" y ")}. Son los datos con los que tus clientes te identifican en su aviso de privacidad.`;
+      },
+      cta: "Completar datos",
+    },
+  },
   nav: {
     label: "Navegación principal",
     today: "Hoy",

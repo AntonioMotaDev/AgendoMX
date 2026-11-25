@@ -32,6 +32,15 @@ export async function getAccountSummary(db: Reader, userId: string, now: Date): 
   return { email: owner.email, businessName: business.name, clients: clientCount?.n ?? 0, appointments: apptCount?.n ?? 0, upcoming: upcoming?.n ?? 0 };
 }
 
+/**
+ * Records that the owner accepted a version of the legal texts (the sign-up box does this for new
+ * accounts; this is for the "new version" gate). Only moves forward to the version the caller names.
+ */
+export async function recordTermsAcceptance(db: Db, userId: string, version: string, now: Date): Promise<boolean> {
+  const updated = await db.update(user).set({ termsVersion: version, termsAcceptedAt: now }).where(eq(user.id, userId)).returning({ id: user.id });
+  return updated.length === 1;
+}
+
 export type DeleteAccountResult = { ok: true; data: { removedUrls: string[] } } | { ok: false; error: "not_found" };
 
 async function lockOwner(tx: Tx, userId: string) {

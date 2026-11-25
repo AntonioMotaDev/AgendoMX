@@ -3,6 +3,7 @@
  * See CLAUDE.md §5 "Flujo de reserva pública".
  */
 import type { BusinessCategory } from "@/lib/categories";
+import { missingControllerData } from "@/lib/legal-content";
 
 /**
  * Health-related categories: merely having an appointment can be sensitive data
@@ -12,6 +13,28 @@ const SENSITIVE_CATEGORIES: ReadonlySet<BusinessCategory> = new Set(["physiother
 
 export function isSensitiveCategory(category: BusinessCategory): boolean {
   return SENSITIVE_CATEGORIES.has(category);
+}
+
+export interface PublicBookingRequirements {
+  /** The business cannot take online bookings: its client notice would not be able to name it as controller. */
+  closed: boolean;
+  /** What the owner still has to register (drives the panel banner). */
+  missing: Array<"address" | "contact">;
+  /** The booking form must carry the express authorization box (health categories). */
+  needsHealthConsent: boolean;
+}
+
+/**
+ * What a public booking needs while the legal texts are published. When they are not (production today),
+ * nothing changes: no requirement, no box. One place so the profile, the form and the server agree.
+ */
+export function publicBookingRequirements(
+  published: boolean,
+  business: { category: BusinessCategory; address: string | null; city: string | null; state: string | null; phone: string | null; whatsapp: string | null },
+): PublicBookingRequirements {
+  if (!published) return { closed: false, missing: [], needsHealthConsent: false };
+  const missing = missingControllerData(business);
+  return { closed: missing.length > 0, missing, needsHealthConsent: isSensitiveCategory(business.category) };
 }
 
 /** Upcoming pending/confirmed appointments one phone number may hold at a business. */

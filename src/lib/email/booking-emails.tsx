@@ -2,6 +2,7 @@ import "server-only";
 import { copy } from "@/lib/copy";
 import { formatInstantDateTime } from "@/lib/dates";
 import { appUrl } from "@/lib/env";
+import { legalPublished } from "@/lib/legal";
 import { isSensitiveCategory } from "@/server/services/booking";
 import type { BusinessCategory } from "@/lib/categories";
 import { BookingEmail, type BookingEmailProps } from "./templates/booking-email";
@@ -13,8 +14,29 @@ interface Rows {
   rows: BookingEmailProps["details"];
 }
 
-function plain(greeting: string, body: string, { rows }: Rows, cta: string, url: string, note?: string): string {
-  return [greeting, "", body, "", ...rows.map((r) => `${r.label}: ${r.value}`), "", `${cta}: ${url}`, ...(note ? ["", note] : []), "", copy.email.footer].join("\n");
+/**
+ * Link to the privacy notice for the footer: the business's own notice for clients (the business is
+ * the controller), the owners' notice for the owner. Only while the legal pages are published (they 404 otherwise).
+ */
+function privacyUrlFor(audience: { client: string } | "owner"): string | undefined {
+  if (!legalPublished()) return undefined;
+  return audience === "owner" ? `${appUrl()}/privacidad` : `${appUrl()}/${audience.client}/privacidad`;
+}
+
+function plain(greeting: string, body: string, { rows }: Rows, cta: string, url: string, note?: string, privacyUrl?: string): string {
+  return [
+    greeting,
+    "",
+    body,
+    "",
+    ...rows.map((r) => `${r.label}: ${r.value}`),
+    "",
+    `${cta}: ${url}`,
+    ...(note ? ["", note] : []),
+    "",
+    copy.email.footer,
+    ...(privacyUrl ? [`${copy.email.privacyNotice}: ${privacyUrl}`] : []),
+  ].join("\n");
 }
 
 export interface ClientEmailInput {
@@ -24,7 +46,7 @@ export interface ClientEmailInput {
   status: "confirmed" | "pending";
   startsAt: Date;
   serviceName: string;
-  business: { name: string; category: BusinessCategory; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
+  business: { name: string; slug: string; category: BusinessCategory; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
 }
 
 /**
@@ -44,10 +66,11 @@ export function sendClientBookingEmail(input: ClientEmailInput) {
   const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
   const body = confirmed ? c.client.confirmedBody(b.name) : c.client.pendingBody(b.name);
   const note = `${c.client.cancelHint(b.cancellationMinHours)} ${c.client.ignore}`;
+  const privacyUrl = privacyUrlFor({ client: b.slug });
   return sendEmail({
     to: input.to,
     subject: confirmed ? c.client.confirmedSubject(b.name) : c.client.pendingSubject(b.name),
-    text: plain(greeting, body, { rows }, c.client.cta, url, note),
+    text: plain(greeting, body, { rows }, c.client.cta, url, note, privacyUrl),
     react: (
       <BookingEmail
         preview={confirmed ? c.client.confirmedPreview : c.client.pendingPreview}
@@ -57,6 +80,7 @@ export function sendClientBookingEmail(input: ClientEmailInput) {
         cta={c.client.cta}
         url={url}
         note={note}
+        privacyUrl={privacyUrl}
       />
     ),
   });
@@ -88,11 +112,12 @@ export function sendOwnerBookingEmail(input: OwnerEmailInput) {
   const subject = input.kind === "new" ? o.newSubject(when) : input.kind === "request" ? o.requestSubject(when) : o.cancelledSubject(when);
   const preview = input.kind === "new" ? o.newPreview : input.kind === "request" ? o.requestPreview : o.cancelledPreview;
   const body = input.kind === "new" ? o.newBody : input.kind === "request" ? o.requestBody : o.cancelledBody;
+  const privacyUrl = privacyUrlFor("owner");
   return sendEmail({
     to: input.to,
     subject,
-    text: plain(greeting, body, { rows }, o.cta, url),
-    react: <BookingEmail preview={preview} greeting={greeting} body={body} details={rows} cta={o.cta} url={url} />,
+    text: plain(greeting, body, { rows }, o.cta, url, undefined, privacyUrl),
+    react: <BookingEmail preview={preview} greeting={greeting} body={body} details={rows} cta={o.cta} url={url} privacyUrl={privacyUrl} />,
   });
 }
 
@@ -117,11 +142,12 @@ export function sendClientStatusEmail(input: ClientStatusEmailInput) {
   const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
   const rejected = input.kind === "rejected";
   const body = rejected ? s.rejectedBody(b.name) : s.cancelledBody(b.name);
+  const privacyUrl = privacyUrlFor({ client: b.slug });
   return sendEmail({
     to: input.to,
     subject: rejected ? s.rejectedSubject(b.name) : s.cancelledSubject(b.name),
-    text: plain(greeting, body, { rows }, s.cta, url),
-    react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} />,
+    text: plain(greeting, body, { rows }, s.cta, url, undefined, privacyUrl),
+    react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} privacyUrl={privacyUrl} />,
   });
 }
 
@@ -131,7 +157,7 @@ export interface ReminderEmailInput {
   token: string;
   startsAt: Date;
   serviceName: string;
-  business: { name: string; category: BusinessCategory; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
+  business: { name: string; slug: string; category: BusinessCategory; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
 }
 
 /** 24 h reminder. Health categories never name the service (CLAUDE.md §6). */
@@ -148,10 +174,11 @@ export function sendReminderEmail(input: ReminderEmailInput) {
   const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
   const body = r.body(b.name);
   const note = c.client.cancelHint(b.cancellationMinHours);
+  const privacyUrl = privacyUrlFor({ client: b.slug });
   return sendEmail({
     to: input.to,
     subject: r.subject(b.name),
-    text: plain(greeting, body, { rows }, r.cta, url, note),
-    react: <BookingEmail preview={r.preview} greeting={greeting} body={body} details={rows} cta={r.cta} url={url} note={note} />,
+    text: plain(greeting, body, { rows }, r.cta, url, note, privacyUrl),
+    react: <BookingEmail preview={r.preview} greeting={greeting} body={body} details={rows} cta={r.cta} url={url} note={note} privacyUrl={privacyUrl} />,
   });
 }

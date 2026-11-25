@@ -44,6 +44,8 @@ export const bookingRequestSchema = z.object({
   ...clientFields,
   /** Honeypot: hidden from people, bots fill it in. */
   website: z.string().max(200).nullish(),
+  /** Express authorization box, shown only for health categories while the legal texts are published. */
+  healthConsent: z.boolean().nullish(),
   turnstileToken: z.string().max(2048).nullish(),
 });
 

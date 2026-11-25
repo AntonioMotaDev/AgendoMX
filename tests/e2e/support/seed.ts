@@ -10,6 +10,11 @@ export interface OwnerSpec {
   slug: string;
   mode: "auto" | "manual";
   services: Array<{ name: string; minutes: number; priceCents: number; buffer: number }>;
+  /** Defaults to a barbershop. */
+  category?: string;
+  /** Defaults to a complete profile (address and WhatsApp). `false` leaves it out. */
+  address?: string | false;
+  whatsapp?: string | false;
 }
 
 /**
@@ -26,9 +31,11 @@ export async function seedOwner(spec: OwnerSpec): Promise<{ businessId: string }
 
   return withDb(async (sql) => {
     await sql`update "user" set email_verified = true where email = ${spec.email}`;
+    const whatsapp = spec.whatsapp === false ? null : (spec.whatsapp ?? "+525512345678");
+    const address = spec.address === false ? null : (spec.address ?? "Juárez 123");
     const [business] = await sql<{ id: string }[]>`
       insert into businesses (owner_user_id, slug, name, category, description, whatsapp, address, city, state, confirmation_mode, onboarding_completed_at)
-      select id, ${spec.slug}, ${spec.business}, 'barbershop', 'Negocio de prueba para E2E.', '+525512345678', 'Juárez 123', 'Guadalajara', 'Jalisco',
+      select id, ${spec.slug}, ${spec.business}, ${spec.category ?? "barbershop"}::business_category, 'Negocio de prueba para E2E.', ${whatsapp}, ${address}, 'Guadalajara', 'Jalisco',
              ${spec.mode}::confirmation_mode, now()
       from "user" where email = ${spec.email} returning id`;
     const [staff] = await sql<{ id: string }[]>`insert into staff (business_id, name) values (${business!.id}, ${spec.name}) returning id`;

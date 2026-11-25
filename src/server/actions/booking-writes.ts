@@ -34,6 +34,8 @@ export interface BookingInput {
   start: Date;
   client: { name: string; phone: string; email: string | null };
   now: Date;
+  /** Evidence of the privacy notice shown (and, for health categories, of the express authorization). Null when the legal texts are not published. */
+  consent?: { privacyNoticeVersion: string; healthConsentAt: Date | null } | null;
 }
 
 export interface CreatedBooking {
@@ -91,6 +93,7 @@ export async function createPublicBooking(db: Db, business: BusinessRow, input: 
         source: "public_link",
         actor: "client",
         limitActive: true,
+        consent: input.consent ?? null,
       });
     });
   } catch (error) {
@@ -111,6 +114,7 @@ interface InsertBookingInput {
   actor: "client" | "owner";
   /** Public bookings are capped per phone; the owner is not limited. */
   limitActive: boolean;
+  consent?: { privacyNoticeVersion: string; healthConsentAt: Date | null } | null;
 }
 
 /**
@@ -159,6 +163,8 @@ async function insertBooking(tx: Tx, i: InsertBookingInput): Promise<BookingResu
       source: i.source,
       publicToken,
       expiresAt: initial.expiresAt,
+      privacyNoticeVersion: i.consent?.privacyNoticeVersion ?? null,
+      healthConsentAt: i.consent?.healthConsentAt ?? null,
     })
     .returning({ id: appointments.id });
   if (!created) throw new Error("appointment insert returned no row");

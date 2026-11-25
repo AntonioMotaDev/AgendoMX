@@ -6,9 +6,11 @@ import { getDb } from "@/db";
 import { hitRateLimit } from "@/db/rate-limit";
 import { getAuth } from "@/lib/auth";
 import { copy } from "@/lib/copy";
+import { legalPublished } from "@/lib/legal";
+import { LEGAL_VERSION } from "@/lib/legal-content";
 import { requireOwner } from "@/lib/session";
 import { confirmationMatches } from "@/server/services/account";
-import { deleteOwnerAccount, getAccountSummary } from "./account-writes";
+import { deleteOwnerAccount, getAccountSummary, recordTermsAcceptance } from "./account-writes";
 import { guarded } from "./helpers";
 import { purgeCachedImages } from "./media-cache";
 import { fail, ok, type ActionResult } from "./result";
@@ -44,5 +46,22 @@ export async function deleteAccountAction(raw: unknown): Promise<ActionResult<{ 
     if (!result.ok) return fail(e.notFound);
     await purgeCachedImages(result.data.removedUrls);
     return ok({ deleted: true as const });
+  });
+}
+
+/**
+ * The owner accepts the current version of the terms and privacy notice (the gate shown after the texts
+ * change). The version must be the one the server runs: a stale page cannot accept an older text.
+ */
+export async function acceptTermsAction(raw: unknown): Promise<ActionResult<{ accepted: true }>> {
+  const owner = await requireOwner();
+  const t = copy.panel.legal.gate;
+  return guarded("acceptTerms", async () => {
+    if (!legalPublished()) return fail(t.error);
+    const version = typeof raw === "object" && raw !== null ? (raw as { version?: unknown }).version : undefined;
+    if (version !== LEGAL_VERSION) return fail(t.outdated);
+    const db = await getDb();
+    const saved = await recordTermsAcceptance(db, owner.id, LEGAL_VERSION, new Date());
+    return saved ? ok({ accepted: true as const }) : fail(t.error);
   });
 }
