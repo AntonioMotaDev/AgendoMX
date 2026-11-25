@@ -1,3 +1,5 @@
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { AgendaTabs } from "@/components/dashboard/agenda-tabs";
 import { AppointmentCard } from "@/components/dashboard/appointment-card";
 import { getDb } from "@/db";
@@ -32,9 +34,15 @@ export async function AgendaScreen({ day }: { day: "today" | "tomorrow" }) {
   return (
     <section className="flex flex-col gap-5">
       <AgendaTabs current={day} />
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{day === "today" ? t.todayTitle : t.tomorrowTitle}</h1>
-        <p className="mt-1 text-base text-ink-muted">{displayLocalDate(date, true)}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{day === "today" ? t.todayTitle : t.tomorrowTitle}</h1>
+          <p className="mt-1 text-base text-ink-muted">{displayLocalDate(date, true)}</p>
+        </div>
+        <Link href="/app/citas/nueva" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md bg-ink px-4 text-sm font-semibold text-surface hover:bg-ink/90">
+          <Plus aria-hidden="true" className="h-4 w-4" />
+          {t.newAppointment}
+        </Link>
       </div>
 
       {pendingCards.length > 0 ? (
