@@ -22,6 +22,34 @@
       "when": 1795539873088,
       "tag": "0002_booking_modes",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795550747464,
+      "tag": "0003_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795552883030,
+      "tag": "0004_social_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795555287204,
+      "tag": "0005_category_other",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795581672305,
+      "tag": "0006_media_paths",
+      "breakpoints": true
     }
   ]
 }

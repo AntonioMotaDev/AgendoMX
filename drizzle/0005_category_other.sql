@@ -1,0 +1,2 @@
+ALTER TABLE "businesses" ADD COLUMN "category_other" text;--> statement-breakpoint
+ALTER TABLE "businesses" ADD CONSTRAINT "businesses_category_other" CHECK ("businesses"."category_other" IS NULL OR ("businesses"."category" = 'other' AND char_length("businesses"."category_other") BETWEEN 2 AND 60));

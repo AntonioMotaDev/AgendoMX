@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scrubEvent, sentryOptions, stripQuery } from "./sentry";
+import { isClientNoise, scrubEvent, sentryOptions, stripQuery } from "./sentry";
 
 describe("scrubEvent", () => {
   it("removes tokens, cookies, bodies, auth headers and user identity", () => {
@@ -35,5 +35,17 @@ describe("sentryOptions", () => {
   it("stripQuery keeps the path", () => {
     expect(stripQuery("/a/b?x=1")).toBe("/a/b");
     expect(stripQuery("/a/b")).toBe("/a/b");
+  });
+});
+
+describe("isClientNoise", () => {
+  it("drops errors a visitor can trigger on purpose", () => {
+    expect(isClientNoise("2026-11-24T19:53:54Z ERROR [Better Auth]: Invalid origin: https://evil.example")).toBe(true);
+    expect(isClientNoise("[Better Auth]: Invalid email or password")).toBe(true);
+  });
+  it("keeps real failures", () => {
+    expect(isClientNoise("[Better Auth]: connection terminated unexpectedly")).toBe(false);
+    expect(isClientNoise("health check failed")).toBe(false);
+    expect(isClientNoise(undefined)).toBe(false);
   });
 });

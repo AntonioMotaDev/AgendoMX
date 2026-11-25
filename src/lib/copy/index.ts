@@ -1,3 +1,7 @@
+import { onboardingCopy } from "./onboarding";
+import { panelCopy } from "./panel";
+import { publicCopy } from "./public";
+
 // All UI text lives here (es-MX, trato de "tú"). See CLAUDE.md §7 and docs/BRAND.md §3.
 export const copy = {
   meta: {
@@ -11,6 +15,9 @@ export const copy = {
     byline: "AgendoMX de FORMA/01",
   },
   tagline: "Tu negocio. Tu tiempo. En orden.",
+  onboarding: onboardingCopy,
+  panel: panelCopy,
+  public: publicCopy,
   auth: {
     common: {
       email: "Correo electrónico",
@@ -98,6 +105,20 @@ export const copy = {
       expires: "El enlace es válido por 1 hora.",
     },
     footer: "AgendoMX de FORMA/01",
+  },
+  pwa: {
+    name: "AgendoMX",
+    description: "Tu agenda de citas, siempre a la mano.",
+    offlineTitle: "Sin conexión",
+    offlineBody: "No hay internet en este momento. Tus citas se muestran cuando vuelvas a conectarte.",
+    retry: "Reintentar",
+    install: {
+      title: "Instala AgendoMX en tu celular",
+      body: "Ábrela como una app, directo desde tu pantalla de inicio.",
+      cta: "Instalar",
+      dismiss: "Ahora no",
+      iosBody: "En iPhone: toca Compartir y luego “Agregar a pantalla de inicio”.",
+    },
   },
   dashboard: {
     todayTitle: "Hoy",

@@ -1,3 +1,7 @@
+export const AUTH_WINDOW_SECONDS = 60;
+export const AUTH_IP_LIMIT = 20;
+export const AUTH_EMAIL_LIMIT = 5;
+
 export type AuthLimitRule = { endpoint: string; byEmail: boolean };
 
 /**
@@ -33,7 +37,8 @@ export async function sha256Hex(value: string): Promise<string> {
 }
 
 export async function ipKey(rule: AuthLimitRule, ip: string): Promise<string> {
-  return `ip:${rule.endpoint}:${ip}`;
+  // Hashed like emails: IPs are personal data and have no business in plain text.
+  return `ip:${rule.endpoint}:${await sha256Hex(ip)}`;
 }
 
 export async function emailKey(rule: AuthLimitRule, email: string): Promise<string> {

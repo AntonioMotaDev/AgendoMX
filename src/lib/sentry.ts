@@ -1,4 +1,4 @@
-import type { CloudflareOptions } from "@sentry/cloudflare";
+import { captureConsoleIntegration, type CloudflareOptions } from "@sentry/cloudflare";
 
 /** Query strings carry one-time tokens (verify email, reset password): never ship them. */
 export function stripQuery(url: string): string {
@@ -34,6 +34,15 @@ export function scrubEvent<T extends ScrubbableEvent>(event: T): T {
   return event;
 }
 
+/**
+ * Errors anyone can trigger with a single request (bad Origin header, wrong
+ * password...). They are expected and would only burn the Sentry quota.
+ */
+export function isClientNoise(message: string | undefined): boolean {
+  if (!message || !message.includes("[Better Auth]")) return false;
+  return /Invalid origin|Invalid email or password|User not found|Invalid token|Email not verified|Password too short/i.test(message);
+}
+
 interface SentryEnv {
   SENTRY_DSN?: string;
   SENTRY_ENVIRONMENT?: string;
@@ -46,6 +55,12 @@ export function sentryOptions(env: SentryEnv): CloudflareOptions {
     environment: env.SENTRY_ENVIRONMENT ?? "production",
     // Errors only for now; Workers Logs already covers request logs.
     tracesSampleRate: 0,
-    beforeSend: (event) => scrubEvent(event),
+    // Next reports render/route errors with console.error and OpenNext cannot load
+    // an instrumentation hook (onRequestError), so forward console errors instead.
+    integrations: [captureConsoleIntegration({ levels: ["error"] })],
+    beforeSend: (event) => {
+      const message = event.message ?? event.exception?.values?.[0]?.value;
+      return isClientNoise(message) ? null : scrubEvent(event);
+    },
   };
 }

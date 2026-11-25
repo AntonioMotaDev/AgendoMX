@@ -19,3 +19,10 @@ export function normalizeMxPhone(input: string): string | null {
 export function toWhatsAppNumber(e164: string): string {
   return e164.replace(/^\+/, "");
 }
+
+/** "+525512345678" → "55 1234 5678", the way owners type it. Anything else is returned unchanged. */
+export function formatMxPhoneForInput(e164: string | null): string {
+  if (!e164) return "";
+  const m = /^\+52(\d{2})(\d{4})(\d{4})$/.exec(e164);
+  return m ? `${m[1]} ${m[2]} ${m[3]}` : e164;
+}

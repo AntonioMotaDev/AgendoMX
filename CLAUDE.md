@@ -44,9 +44,9 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 | Imágenes | Cloudflare R2 (logos, portadas). Compresión en el cliente antes de subir |
 | Mapa | Link "Cómo llegar" (Google Maps URL) + embed de OpenStreetMap. Sin API key de Google Maps |
 | Correo transaccional | Resend + React Email (se configura en la Fase 1: auth lo necesita) |
-| Anti-abuso | Cloudflare Turnstile + binding de Rate Limiting de Workers + honeypot |
+| Anti-abuso | Cloudflare Turnstile + rate limit en Postgres (tabla `rate_limits`) + honeypot |
 | Observabilidad | Workers Logs + Sentry (`@sentry/cloudflare`) desde la Fase 1 |
-| Tareas programadas | Cloudflare Cron Triggers (Worker aparte `workers/cron`) |
+| Tareas programadas | Cloudflare Cron Trigger en el mismo Worker (`scheduled` en `worker.ts` → `POST /api/cron/tick`) |
 | PWA | manifest + service worker (Serwist o manual) |
 | Tests | Vitest (unitarias de disponibilidad + integración del constraint) + Playwright (flujo de reserva) |
 | Package manager | pnpm |
@@ -57,13 +57,19 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - Evita trabajo pesado de CPU por request. Las consultas a BD no cuentan como CPU, el render sí.
 - No uses `export const runtime = 'edge'`: OpenNext corre en modo Node.
 - Accede a bindings (Hyperdrive, R2, Rate Limiting, variables) con `getCloudflareContext()` de `@opennextjs/cloudflare`.
-- Crea la conexión a BD por request a partir de `env.HYPERDRIVE.connectionString`. No uses un cliente global.
+- Crea la conexión a BD por request a partir de `env.HYPERDRIVE.connectionString`. No uses un cliente global. `getDb()` ya memoiza **un cliente por request** (WeakMap por `ctx` de la ejecución): llámalo cuantas veces quieras, no abras pools propios. Antes cada llamada abría un pool que nadie cerraba y agotó las conexiones de Postgres local.
 - `next/image` no optimiza en Workers por defecto: usa un loader propio o imágenes ya comprimidas.
 - **Cache Components (`cacheComponents`) está desactivado**: OpenNext para Cloudflare aún no lo soporta por completo. No lo actives ni uses `"use cache"` hasta que OpenNext lo soporte.
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
+- Server actions: validan con Zod, resuelven `business_id` de la sesión (`getCurrentBusiness()`), y **reciben el input crudo del formulario** (`getValues()`), nunca la copia ya transformada por el resolver (rompió el paso 1 cuando un campo transformado volvía como `null`). Los ids que llegan de URLs/forms se revisan con `isUuid()` antes de consultar: un id mal formado es "no encontrado", no un 500.
+- Imágenes (logo/portada): el navegador las recorta/reduce con canvas (`lib/image-compress.ts`, sin metadatos), el servidor las valida **por sus bytes** (formato real, ≤ 1 MB, 32–4096 px) y las guarda en R2 con clave aleatoria `businesses/{id}/{logo|cover}-{12 chars}.{ext}`; `logo_url`/`cover_url` guardan la ruta `/media/…` (CHECK en BD). Subir/quitar borra el objeto anterior y lo purga de la caché de borde de esa ubicación (`media-cache.ts`; las demás expiran en ≤ 1 h); 20 subidas por hora por negocio. En `next dev` el estado local de R2 vive en `$TMPDIR/agendomx-wrangler-state` (dentro del proyecto el watcher recompilaba en bucle).
+- Reserva pública (Fase 3): `server/queries/public.ts` mapea filas a DTOs explícitos (nunca se hace spread de una fila hacia el navegador; `businessId`/`staffId` no salen del servidor). `createPublicBooking` (`server/actions/booking-writes.ts`) corre en una transacción con un advisory lock por staff, revalida el slot con el motor de disponibilidad y deja la constraint `23P01` como respaldo (ambos caminos regresan `slot_taken`). Un teléfono puede tener máx. 3 citas próximas activas por negocio. Anti-abuso en la action: honeypot → forma (Zod) → rate limit por IP (20/h) → Turnstile → rate limit por teléfono (6/día); claves hasheadas. Turnstile (`lib/turnstile.ts`): con llaves se exige; sin llaves **producción falla cerrado** y desarrollo lo omite. La site key se lee en runtime en el servidor (`TURNSTILE_SITE_KEY`), nunca `NEXT_PUBLIC_`. La site key real va en `vars` de `wrangler.jsonc` (producción y staging) y `TURNSTILE_SECRET_KEY` es un Secret de cada Worker. Las llaves de prueba de Cloudflare (`1x00000000000000000000AA` / `1x0000000000000000000000000000000AA`) sirven para e2e automatizados; no las pongas como `vars` junto a un Secret del mismo nombre (el deploy falla). Correos de cita: categorías de salud nunca nombran el servicio al cliente; el aviso al dueño va al correo de su cuenta. El mapa OSM solo se muestra si hay coordenadas (`lat/lng` o extraídas del link con `extractCoords`); los links cortos `maps.app.goo.gl` aún no se resuelven.
+- Cron (Fase 4): **no hay Worker aparte**. `worker.ts` exporta `scheduled`, que llama por el binding `WORKER_SELF_REFERENCE` a `POST /api/cron/tick`; así el trabajo corre por el camino normal de OpenNext y reutiliza `getDb()`, los correos y el manejo de env (un `scheduled` crudo no tiene `getCloudflareContext` ni `process.env` poblado). Se autentica con `Bearer HMAC(BETTER_AUTH_SECRET, "agendomx-cron-v1")` (`lib/cron-auth.ts`): no requiere otro secret, y sin token la ruta responde 404. Corre cada hora (`triggers.crons` en `wrangler.jsonc`; minuto 7 en producción, 37 en staging). Cada tick (`server/actions/cron-run.ts`): expira `pending` vencidas (evento `expired`, actor `system`), manda recordatorios y limpia `rate_limits`. Recordatorio: cita `confirmed`, con correo, que empieza entre 2 h y 24 h desde ahora y que se reservó con más de 24 h de anticipación (quien reserva para mañana en la mañana ya recibió su confirmación). Idempotente: `claimDueReminders` marca `reminder_sent_at` y toma filas con `FOR UPDATE SKIP LOCKED`; si el envío falla se libera para el siguiente tick. Un fallo no detiene el resto del lote.
+- PWA (Fase 4), sin dependencias nuevas: `src/app/manifest.ts` (`/manifest.webmanifest`, `start_url` `/app`, standalone), íconos PNG en `public/icons/` (generados del isotipo; el maskable deja el logo dentro del 80 %), `public/sw.js` escrito a mano y `/offline` estático. El service worker **nunca cachea HTML** (el panel muestra datos privados): las navegaciones van a la red y, si fallan, muestra `/offline` precacheado; solo `/_next/static/*` es cache-first (URLs con hash). `/offline` usa un formulario GET y no JS, porque se sirve sin red y sus chunks no están en caché. El SW se registra solo en producción (`ServiceWorkerRegister` en el layout del panel); en dev cachearía chunks sin hash. `InstallPrompt` ofrece instalar (evento `beforeinstallprompt` en Android/desktop, instrucciones de Compartir en iPhone) y se descarta con localStorage. `offline`, `icons`, `sw.js` y `manifest.webmanifest` son slugs reservados. Para probar: `pnpm preview --port 8788` (build de producción en workerd; el origen de Better Auth ahí es `https://agendomx.com`, cookie `__Secure-…`).
+- Respaldos (Fase 5): `.github/workflows/backup.yml` (diario 08:17 UTC desde `main`, o manual) → `scripts/backup/` → bucket privado R2 `agendomx-backups/<env>/`. `pg_dump` corre con la imagen `postgres:19` (mismo major que Neon; un cliente más viejo se niega). Cada corrida baja de R2 lo que subió y lo restaura en un Postgres 19 efímero (`verify-restore.sh`: checksum, `btree_gist`, `appointments_no_overlap`, conteos vs. manifest) **antes** de aplicar la retención (30 días, mínimo 7 copias; `retention.sh` solo toca claves con formato de respaldo). `verify-restore.sh` se niega a restaurar en una base con tablas. Secrets de GitHub: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `DATABASE_URL_PRODUCTION` (sin pooler) y opcional `DATABASE_URL_STAGING`; la elección de base es explícita (nunca cae de staging a producción). Runbook y restauración de emergencia: `docs/BACKUPS.md`.
 - Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
 - El entry del Worker es `worker.ts` (envuelve `.open-next/worker.js` con Sentry). `wrangler.jsonc` apunta a él en `main`.
-- Rate limit de auth: `src/lib/rate-limit.ts` (binding de Workers Rate Limiting, por IP y por correo). El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
+- Rate limit de auth: `src/lib/rate-limit.ts`, respaldado por Postgres (tabla `rate_limits`, upsert atómico en `src/db/rate-limit.ts`; por IP y por correo hasheado). Se probó el binding de Workers Rate Limiting en staging y **no impuso el límite** (30 intentos sin un solo 429), por eso no se usa. El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Usa el mismo mecanismo para el rate limit de la reserva pública; `BOOKING_RATE_LIMITER` queda sin uso. No uses `instrumentation.ts`: el hook no carga en el bundle de OpenNext y tumba todo el servidor (500 en cada ruta). Sentry captura los `console.error` del Worker. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
 
 ### Ambientes
 
@@ -76,11 +82,19 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 ```
 src/
   app/
+    page.tsx                # "/" redirige: con sesión a /app, sin sesión a /login (hasta que exista la landing)
     (marketing)/            # landing, precios, aviso de privacidad, términos
     (auth)/                 # login, registro, recuperar contraseña, verificar correo
     (dashboard)/app/        # panel del dueño (protegido): hoy, agenda, servicios, horarios, perfil, ajustes
-    [slug]/                 # perfil público del negocio + flujo de reserva
-    cita/[token]/           # página de la cita para el cliente: ver / cancelar
+      onboarding/           # 4 pasos: negocio, servicio, horario, listo (link/QR). Paso derivado del estado en BD
+      (panel)/              # pantallas del panel; su layout exige onboarding terminado y muestra la barra de navegación
+        servicios/          # lista (orden, ocultar), nuevo, editar/eliminar
+        horarios/           # horario semanal + días especiales (cerrado u horario especial, con rangos)
+        perfil/             # menú: imagenes (logo/portada), informacion, redes (6), link (QR + cambiar slug), reservaciones
+    media/[...key]/         # sirve logos/portadas desde R2; solo claves que generamos (`lib/images.ts`)
+    [slug]/                 # perfil público del negocio (card, servicios, ubicación, contacto)
+      reservar/             # asistente de reserva: servicio → día/hora → datos (acepta ?servicio=<id>)
+    cita/[token]/           # página de la cita para el cliente: ver / cancelar (noindex, no-referrer)
     api/auth/[...all]/      # handler de Better Auth
     # explorar/             # directorio público: POST-MVP (ver sección 10)
   components/
@@ -102,8 +116,6 @@ src/
     reserved-slugs.ts       # slugs que no puede usar un negocio
     copy/                   # textos de UI
     email/                  # plantillas React Email
-workers/
-  cron/                     # Worker de cron: recordatorios, limpieza
 drizzle/                    # migraciones generadas + SQL manual
 ```
 
@@ -111,7 +123,7 @@ drizzle/                    # migraciones generadas + SQL manual
 
 Las tablas de auth (`user`, `session`, `account`, `verification`) las genera Better Auth.
 
-- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), confirmation_mode (auto | manual, default auto), pending_expiry_hours (modo manual, default 24), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
+- **businesses:** id, owner_user_id, slug (único, validado contra `reserved-slugs.ts`), name, category (enum), description, phone, whatsapp, email, address, city, state, maps_url (nullable), facebook_url, instagram_url, twitter_url, tiktok_url, youtube_url, linkedin_url (nullable; URLs https normalizadas con `lib/social.ts`, con CHECK en BD), lat, lng (nullable), logo_url, cover_url, timezone (default `America/Mexico_City`), is_listed (default `false`, para el directorio post-MVP), confirmation_mode (auto | manual, default auto), pending_expiry_hours (modo manual, default 24), booking_lead_time_min (anticipación mínima para reservar), booking_window_days (cuántos días hacia adelante), cancellation_min_hours (anticipación mínima para que el cliente cancele desde su link), cancellation_policy_text, onboarding_completed_at (nullable; define "perfil completo"), plan (free | pro), created_at.
 - **staff:** id, business_id, name, avatar_url, is_active. En el MVP cada negocio tiene 1 staff, creado automáticamente con el dueño, pero el modelo ya soporta varios.
 - **services:** id, business_id, name, description, duration_min, price_cents (nullable), price_is_from (muestra "desde $X"), buffer_after_min, is_bookable_online, is_active, sort_order.
 - **staff_services:** staff_id, service_id (qué staff da qué servicio).
@@ -119,6 +131,7 @@ Las tablas de auth (`user`, `session`, `account`, `verification`) las genera Bet
 - **availability_exceptions:** id, staff_id, date, start_time (nullable), end_time (nullable), type (closed | custom_hours). Para vacaciones, días festivos y horario especial.
 - **clients:** id, business_id, name, phone (E.164), email (nullable), notes_short (nullable, máx. 280 caracteres, sin datos de salud), created_at. Único por (business_id, phone).
 - **appointments:** id, business_id, staff_id, service_id, client_id, starts_at (timestamptz), ends_at (timestamptz, = starts_at + duración), blocked_until (timestamptz, = ends_at + buffer_after_min), service_name_snapshot, price_cents_snapshot (nullable), status (pending | confirmed | cancelled | completed | no_show | rejected | expired), source (public_link | manual | directory), public_token (para el link de la cita del cliente), expires_at (nullable; solo `pending`), reminder_sent_at (nullable; idempotencia del cron), cancelled_by, cancel_reason, created_at.
+- **rate_limits:** key (PK), window_start, count. Contadores de ventana fija para anti-abuso. Las claves nunca llevan correos ni teléfonos en claro.
 - **appointment_events:** id, appointment_id, type, actor (owner | client | system), note (nullable, operativa, sin datos clínicos), created_at. Registro append-only de cambios de estado.
 
 Los snapshots guardan el nombre y precio del servicio al momento de reservar, para que editar un servicio no altere citas pasadas.
@@ -174,7 +187,7 @@ Función pura y testeada. Entrada: reglas, excepciones, citas existentes (con `b
 4. Estado inicial: `confirmed` si `confirmation_mode = auto` (default); `pending` con `expires_at` si es `manual`. Una cita `pending` bloquea el horario; el cron la pasa a `expired` al vencer. Todo cambio de estado escribe en `appointment_events`.
 5. Se manda correo de confirmación al cliente (si dio correo) y aviso al dueño.
 6. El cliente recibe el link `/cita/{public_token}` para **ver y cancelar**. Cancelar solo se permite hasta `cancellation_min_hours` antes de la cita; después, se muestra el WhatsApp del negocio. Reprogramar = cancelar y volver a agendar (reprogramación nativa es post-MVP).
-7. Protección anti-abuso: rate limit por IP y por teléfono (binding de Rate Limiting), honeypot y Turnstile desde el inicio.
+7. Protección anti-abuso: rate limit por IP y por teléfono (Postgres, `hitRateLimit`), honeypot y Turnstile desde el inicio.
 
 ### Slugs
 
@@ -231,7 +244,7 @@ pnpm cf-typegen       # regenera tipos de bindings tras editar wrangler.jsonc
 pnpm lint && pnpm typecheck
 ```
 
-Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnpm test`.
+Antes de dar una tarea por terminada, corre `pnpm lint`, `pnpm typecheck` y `pnpm test`. Los archivos de integración corren en serie (`fileParallelism: false`): comparten y recrean el mismo esquema. No encadenes `git push` detrás de un `grep` de resultados de test: sale 0 aunque haya fallas.
 
 `tests/integration/` **borra y recrea el esquema** de la BD de `DATABASE_URL_TEST`: apúntala solo a una base desechable (Postgres local o una rama efímera de Neon), nunca a dev, staging ni producción.
 
@@ -251,7 +264,7 @@ TURNSTILE_SECRET_KEY=
 SENTRY_DSN=              # var pública en wrangler.jsonc (un DSN no es secreto)
 SENTRY_ENVIRONMENT=      # var en wrangler.jsonc: production | staging
 NEXT_PUBLIC_APP_URL=https://agendomx.com
-# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE, BOOKING_RATE_LIMITER, AUTH_IP_RATE_LIMITER, AUTH_EMAIL_RATE_LIMITER
+# Bindings: ASSETS_BUCKET (R2), HYPERDRIVE
 ```
 
 ## 10. Alcance del MVP

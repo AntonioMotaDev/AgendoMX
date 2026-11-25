@@ -12,7 +12,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: copy.meta.title,
   description: copy.meta.description,
-  icons: { icon: "/brand/isotipo.svg" },
+  icons: { icon: "/brand/isotipo.svg", apple: "/icons/apple-touch-icon.png" },
+  // iOS home-screen launch: standalone window with the app name.
+  appleWebApp: { capable: true, title: copy.pwa.name, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

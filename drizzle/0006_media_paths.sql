@@ -1,0 +1,1 @@
+ALTER TABLE "businesses" ADD CONSTRAINT "businesses_media_paths" CHECK (("businesses"."logo_url" IS NULL OR "businesses"."logo_url" LIKE '/media/businesses/%') AND ("businesses"."cover_url" IS NULL OR "businesses"."cover_url" LIKE '/media/businesses/%'));

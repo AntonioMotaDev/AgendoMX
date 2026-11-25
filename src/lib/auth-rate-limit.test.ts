@@ -31,6 +31,9 @@ describe("keys", () => {
     expect(a).toBe(await emailKey(rule, "juan@example.com"));
     expect(a).not.toBe(await emailKey(rule, "ana@example.com"));
   });
+  it("never contain the raw IP", async () => {
+    expect(await ipKey(rule, "203.0.113.7")).not.toContain("203.0.113.7");
+  });
   it("separate endpoints get separate buckets", async () => {
     expect(await ipKey(rule, "1.2.3.4")).not.toBe(await ipKey({ endpoint: "sign-up", byEmail: true }, "1.2.3.4"));
   });

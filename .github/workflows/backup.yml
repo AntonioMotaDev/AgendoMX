@@ -1,0 +1,131 @@
+name: Backup
+
+# Daily pg_dump of the Neon database to a private R2 bucket. Every run also proves the
+# backup is usable: the object is downloaded back from R2 and restored into a throwaway
+# Postgres 19, and its row counts are checked. Old backups are pruned only after that.
+#
+# NOTE: GitHub runs `schedule` triggers only from the default branch, so the daily run
+# starts once this file is on `main`. `workflow_dispatch` works from any branch.
+on:
+  schedule:
+    - cron: "17 8 * * *" # 02:17 in Mexico City, a quiet hour
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which database to back up
+        type: choice
+        options: [production, staging]
+        default: production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      # Throwaway server the backup is restored into to prove it works.
+      restore-check:
+        image: postgres:19
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ENVIRONMENT: ${{ inputs.environment || 'production' }}
+      BUCKET: agendomx-backups
+      # Same major version as Neon: pg_dump refuses to dump a newer server.
+      PG_DOCKER_IMAGE: postgres:19
+      KEEP_DAYS: "30"
+      MIN_KEEP: "7"
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_ENDPOINT_URL: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      # aws-cli v2 sends checksum headers R2 does not accept unless told to only do so when required.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      DATABASE_URL_PRODUCTION: ${{ secrets.DATABASE_URL_PRODUCTION }}
+      DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check configuration
+        run: |
+          # Pick the source explicitly: never fall back from one environment's database to the other's.
+          case "$ENVIRONMENT" in
+            production) source_url="$DATABASE_URL_PRODUCTION"; source_name=DATABASE_URL_PRODUCTION ;;
+            staging) source_url="$DATABASE_URL_STAGING"; source_name=DATABASE_URL_STAGING ;;
+            *) echo "::error::Unknown environment '$ENVIRONMENT'"; exit 1 ;;
+          esac
+          missing=0
+          [ -n "$source_url" ] || { echo "::error::Missing GitHub secret $source_name. See docs/BACKUPS.md"; missing=1; }
+          [ -n "$AWS_ACCESS_KEY_ID" ] || { echo "::error::Missing GitHub secret R2_ACCESS_KEY_ID. See docs/BACKUPS.md"; missing=1; }
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || { echo "::error::Missing GitHub secret R2_SECRET_ACCESS_KEY. See docs/BACKUPS.md"; missing=1; }
+          [ "$missing" = 0 ] || exit 1
+          echo "SOURCE_URL=$source_url" >> "$GITHUB_ENV"
+
+      - name: Pull Postgres 19 client
+        run: docker pull "$PG_DOCKER_IMAGE"
+
+      - name: Dump
+        id: dump
+        run: |
+          path="$(scripts/backup/backup.sh "$ENVIRONMENT" "$RUNNER_TEMP/backup")"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$path")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to R2
+        run: |
+          name="${{ steps.dump.outputs.name }}"
+          dir="$RUNNER_TEMP/backup"
+          # The dump first, the manifest last: a manifest in the bucket always has its dump.
+          aws s3 cp "$dir/$name" "s3://$BUCKET/$ENVIRONMENT/$name" --no-progress
+          aws s3 cp "$dir/${name%.dump}.json" "s3://$BUCKET/$ENVIRONMENT/${name%.dump}.json" --no-progress
+          remote="$(aws s3api head-object --bucket "$BUCKET" --key "$ENVIRONMENT/$name" --query ContentLength --output text)"
+          local_size="$(stat -c %s "$dir/$name")"
+          [ "$remote" = "$local_size" ] || { echo "::error::Uploaded size $remote differs from local $local_size"; exit 1; }
+
+      - name: Prove it restores (download from R2, restore into a throwaway Postgres 19)
+        env:
+          TARGET_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+        run: |
+          name="${{ steps.dump.outputs.name }}"
+          check="$RUNNER_TEMP/restore-check"
+          mkdir -p "$check"
+          aws s3 cp "s3://$BUCKET/$ENVIRONMENT/$name" "$check/$name" --no-progress
+          aws s3 cp "s3://$BUCKET/$ENVIRONMENT/${name%.dump}.json" "$check/${name%.dump}.json" --no-progress
+          scripts/backup/verify-restore.sh "$check/$name"
+
+      - name: Prune old backups
+        run: |
+          aws s3api list-objects-v2 --bucket "$BUCKET" --prefix "$ENVIRONMENT/" --query 'Contents[].Key' --output text \
+            | tr '\t' '\n' | { grep -v '^None$' || true; } | scripts/backup/retention.sh > "$RUNNER_TEMP/expired.txt"
+          while read -r key; do
+            [ -n "$key" ] || continue
+            echo "deleting $key"
+            aws s3 rm "s3://$BUCKET/$key"
+            aws s3 rm "s3://$BUCKET/${key%.dump}.json"
+          done < "$RUNNER_TEMP/expired.txt"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Backup $ENVIRONMENT"
+            echo "- Object: \`$ENVIRONMENT/${{ steps.dump.outputs.name }}\`"
+            echo "- Size: $(stat -c %s "$RUNNER_TEMP/backup/${{ steps.dump.outputs.name }}") bytes"
+            echo "- Restore check: passed (downloaded from R2 and restored into Postgres 19)"
+            echo '```json'
+            cat "$RUNNER_TEMP/backup/$(basename "${{ steps.dump.outputs.name }}" .dump).json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
