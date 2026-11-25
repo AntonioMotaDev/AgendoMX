@@ -77,7 +77,7 @@ Construidas y **apagadas por la bandera `LEGAL_PUBLISHED`** (hoy encendida solo 
 | Limpieza de sesiones | El cron borra sesiones y tokens vencidos hace más de 1 día | **Hecho** |
 | Menores | Cláusula provisional: la cita la agenda madre, padre o tutor. El producto no pregunta edad ni verifica nada | Solo texto **[VERIFICAR]** |
 
-Qué hacer cuando legal apruebe: (1) editar los `.md`, quitar todo `[VERIFICAR]`/`[ASÍ]`/"BORRADOR" y subir la versión (los tres a la vez); (2) `pnpm legal:sync`; (3) poner `"LEGAL_PUBLISHED": "true"` en las `vars` de producción de `wrangler.jsonc` (una prueba falla si aún quedan marcadores); (4) aplicar las migraciones **0007 y 0008** en producción **antes** de desplegar; (5) desplegar; (6) **conservar copia de la versión publicada** (etiqueta de git o archivo con fecha): el registro de aceptación solo guarda el número de versión.
+Qué hacer cuando legal apruebe: (1) editar los `.md`, quitar todo `[VERIFICAR]`/`[ASÍ]`/"BORRADOR" y subir la versión (los tres a la vez); (2) `pnpm legal:sync`; (3) poner `"LEGAL_PUBLISHED": "true"` en las `vars` de producción de `wrangler.jsonc` (una prueba falla si aún quedan marcadores); (4) las migraciones **0007 y 0008** ya están aplicadas en producción (25 nov 2026; ver abajo), así que solo confirma que no haya migraciones nuevas sin aplicar; (5) desplegar; (6) **conservar copia de la versión publicada** (etiqueta de git o archivo con fecha): el registro de aceptación solo guarda el número de versión.
 
 ## Qué se hizo con la revisión previa (otro asistente, 25 nov 2026)
 
@@ -149,6 +149,6 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 - [x] Casilla de autorización para categorías de salud, con evidencia.
 - [x] Pantalla de aceptación de versión nueva y borrado de cuenta sin negocio.
 - [x] Exigencia de domicilio y contacto para recibir reservas.
-- [ ] Aplicar las migraciones 0007 y 0008 en producción antes del despliegue.
+- [x] Migraciones 0007 y 0008 aplicadas en producción (25 nov 2026, rama `production` de Neon; también en `staging`). Solo agregan columnas nulas: el código desplegado antes de esta versión sigue funcionando.
 - [ ] Proceso de incidentes y ficha por proveedor.
 - [ ] Guardar copia de la versión publicada.
