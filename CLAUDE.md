@@ -77,6 +77,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 ```
 src/
   app/
+    page.tsx                # "/" redirige: con sesión a /app, sin sesión a /login (hasta que exista la landing)
     (marketing)/            # landing, precios, aviso de privacidad, términos
     (auth)/                 # login, registro, recuperar contraseña, verificar correo
     (dashboard)/app/        # panel del dueño (protegido): hoy, agenda, servicios, horarios, perfil, ajustes
