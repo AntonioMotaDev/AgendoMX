@@ -64,7 +64,11 @@
         "BETTER_AUTH_URL": "https://staging.agendomx.com",
         "EMAIL_FROM": "AgendoMX Staging <citas@agendomx.com>",
         "SENTRY_DSN": "https://4575660e8993ba43bf1e2eb34d6e5107@o4512488147714048.ingest.us.sentry.io/4512488176746496",
-        "SENTRY_ENVIRONMENT": "staging"
+        "SENTRY_ENVIRONMENT": "staging",
+        // Cloudflare's documented always-passes TEST keys (public, not secrets). Staging only.
+        // For real keys: delete both vars, set the real site key here and add TURNSTILE_SECRET_KEY as a Secret.
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA"
       }
     }
   }
