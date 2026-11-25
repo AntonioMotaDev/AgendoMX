@@ -7,7 +7,7 @@
 
 ## A. Versión corta (se muestra en el formulario de reserva, junto al botón "Confirmar cita")
 
-> **{Nombre del negocio}** usará tu nombre, celular y correo (si lo escribes) para gestionar tu cita, contactarte sobre ella y, si dejaste correo, enviarte la confirmación y un recordatorio. **AgendoMX**, la plataforma de reservas, los guarda y procesa por cuenta del negocio. No los usamos para publicidad. Puedes ejercer tus derechos con el negocio o en `[CORREO DE PRIVACIDAD]`. [Aviso de privacidad completo](/privacidad/clientes)
+> **{Nombre del negocio}** usará tu nombre, celular y correo (si lo escribes) para gestionar tu cita, contactarte sobre ella y, si dejaste correo, enviarte la confirmación y un recordatorio. **AgendoMX**, la plataforma de reservas, los guarda y procesa por cuenta del negocio. No los usamos para publicidad. Puedes ejercer tus derechos con el negocio o en `[CORREO DE PRIVACIDAD]`. [Aviso de privacidad completo](/{slug}/privacidad)
 
 ---
 

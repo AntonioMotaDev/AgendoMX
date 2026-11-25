@@ -70,7 +70,9 @@
         "EMAIL_FROM": "AgendoMX Staging <citas@agendomx.com>",
         "SENTRY_DSN": "https://4575660e8993ba43bf1e2eb34d6e5107@o4512488147714048.ingest.us.sentry.io/4512488176746496",
         "SENTRY_ENVIRONMENT": "staging",
-        "TURNSTILE_SITE_KEY": "0x4AAAAAAGSjefQS6gkSrBPH"
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAGSjefQS6gkSrBPH",
+        // Legal pages, registration checkbox and booking notice are visible here while the texts are drafts.
+        "LEGAL_PUBLISHED": "true"
       }
     }
   }

@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import { E2E_BASE_URL, E2E_DATABASE_URL } from "../../../playwright.config";
+import { LEGAL_VERSION } from "../../../src/lib/legal-content";
 import { OWNER_A, OWNER_B, PASSWORD } from "./fixtures";
 
 const maintenanceUrl = E2E_DATABASE_URL.replace(/\/[^/?]+(\?|$)/, "/postgres$1");
@@ -16,7 +17,7 @@ async function createOwner(email: string, name: string) {
   const response = await fetch(`${E2E_BASE_URL}/api/auth/sign-up/email`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: E2E_BASE_URL },
-    body: JSON.stringify({ name, email, password: PASSWORD }),
+    body: JSON.stringify({ name, email, password: PASSWORD, termsVersion: LEGAL_VERSION }),
   });
   if (!response.ok) throw new Error(`sign-up failed for ${email}: ${response.status} ${await response.text()}`);
 }

@@ -49,6 +49,8 @@ export default defineConfig({
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       RESEND_API_KEY: "",
+      // The legal pages, registration checkbox and booking notice are dark by default: E2E exercises them.
+      LEGAL_PUBLISHED: "true",
     },
   },
 });

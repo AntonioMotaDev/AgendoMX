@@ -27,6 +27,12 @@ export const registerSchema = z.object({
   password: newPassword,
 });
 
+/** Registration when the legal texts are published: the box must be ticked. */
+export const registerWithTermsSchema = registerSchema.extend({
+  acceptTerms: z.boolean().refine((value) => value === true, copy.auth.register.acceptRequired),
+});
+export type RegisterWithTermsInput = z.infer<typeof registerWithTermsSchema>;
+
 export const forgotPasswordSchema = z.object({ email });
 
 export const resetPasswordSchema = z.object({ password: newPassword });

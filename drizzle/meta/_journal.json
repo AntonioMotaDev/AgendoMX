@@ -50,6 +50,13 @@
       "when": 1795581672305,
       "tag": "0006_media_paths",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795634043760,
+      "tag": "0007_terms_acceptance",
+      "breakpoints": true
     }
   ]
 }
