@@ -47,3 +47,65 @@ export function normalizeMapsUrl(input: string): MapsResult {
   parsed.hash = "";
   return { ok: true, url: parsed.toString() };
 }
+
+export interface Coords {
+  lat: number;
+  lng: number;
+}
+
+/** Rough bounding box of Mexico; anything outside is treated as "not a pin we trust". */
+const MX_BOUNDS = { latMin: 14, latMax: 33.5, lngMin: -119, lngMax: -86 } as const;
+
+function validCoords(lat: number, lng: number): Coords | null {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < MX_BOUNDS.latMin || lat > MX_BOUNDS.latMax || lng < MX_BOUNDS.lngMin || lng > MX_BOUNDS.lngMax) return null;
+  return { lat, lng };
+}
+
+const NUM = "-?\\d{1,3}(?:\\.\\d+)?";
+const PAIR_RE = new RegExp(`^\\s*(${NUM})\\s*,\\s*(${NUM})\\s*$`);
+
+function fromPair(value: string | null): Coords | null {
+  const m = value ? PAIR_RE.exec(value) : null;
+  return m ? validCoords(Number(m[1]), Number(m[2])) : null;
+}
+
+/**
+ * Best-effort pin from a full (already normalized) map link. Short links
+ * (maps.app.goo.gl) carry no coordinates; they are resolved separately.
+ * Order matters: `!3d..!4d..` is the place itself, `@lat,lng` is only the viewport.
+ */
+export function extractCoords(url: string): Coords | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const decodedPath = (() => {
+    try {
+      return decodeURIComponent(parsed.pathname);
+    } catch {
+      return parsed.pathname;
+    }
+  })();
+
+  const place = new RegExp(`!3d(${NUM})!4d(${NUM})`).exec(decodedPath + parsed.search);
+  if (place) {
+    const c = validCoords(Number(place[1]), Number(place[2]));
+    if (c) return c;
+  }
+  const at = new RegExp(`@(${NUM}),(${NUM})`).exec(decodedPath);
+  if (at) {
+    const c = validCoords(Number(at[1]), Number(at[2]));
+    if (c) return c;
+  }
+  for (const key of ["q", "ll", "query", "destination", "daddr"]) {
+    const c = fromPair(parsed.searchParams.get(key));
+    if (c) return c;
+  }
+  const mlat = parsed.searchParams.get("mlat");
+  const mlon = parsed.searchParams.get("mlon");
+  if (mlat && mlon) return validCoords(Number(mlat), Number(mlon));
+  return null;
+}

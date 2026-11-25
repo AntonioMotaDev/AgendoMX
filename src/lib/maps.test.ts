@@ -40,3 +40,24 @@ describe("normalizeMapsUrl", () => {
     expect(url("   ")).toBeNull();
   });
 });
+
+import { extractCoords } from "./maps";
+
+describe("extractCoords", () => {
+  it("reads the place pin before the viewport", () => {
+    expect(extractCoords("https://www.google.com/maps/place/X/@22.15,-100.97,17z/data=!3d22.1501!4d-100.9712")).toEqual({ lat: 22.1501, lng: -100.9712 });
+  });
+  it("reads @lat,lng, q=, ll=, and OSM mlat/mlon", () => {
+    expect(extractCoords("https://www.google.com/maps/place/Barber%C3%ADa/@22.15,-100.97,17z")).toEqual({ lat: 22.15, lng: -100.97 });
+    expect(extractCoords("https://maps.google.com/?q=22.15,-100.97")).toEqual({ lat: 22.15, lng: -100.97 });
+    expect(extractCoords("https://maps.apple.com/?ll=19.43,-99.13")).toEqual({ lat: 19.43, lng: -99.13 });
+    expect(extractCoords("https://www.openstreetmap.org/?mlat=22.15&mlon=-100.97")).toEqual({ lat: 22.15, lng: -100.97 });
+  });
+  it("ignores short links, text queries and pins outside Mexico", () => {
+    expect(extractCoords("https://maps.app.goo.gl/AbCdEf123")).toBeNull();
+    expect(extractCoords("https://maps.google.com/?q=barberia+centro")).toBeNull();
+    expect(extractCoords("https://www.google.com/maps/@40.71,-74.0,12z")).toBeNull();
+    expect(extractCoords("https://maps.google.com/?q=0,0")).toBeNull();
+    expect(extractCoords("not a url")).toBeNull();
+  });
+});
