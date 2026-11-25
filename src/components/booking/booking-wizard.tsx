@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { InlineMarkdown } from "@/components/legal/legal-document";
 import { Field } from "@/components/ui/field";
 import { copy } from "@/lib/copy";
 import { displayLocalDate } from "@/lib/dates";
@@ -33,6 +34,8 @@ interface Props {
   manualConfirmation: boolean;
   /** null = Turnstile off (local development only; the server decides if that is allowed). */
   turnstileSiteKey: string | null;
+  /** Short privacy notice (markdown, already naming the business as controller); null while the legal texts are not published. */
+  privacyNotice?: string | null;
 }
 
 type Step = "service" | "when" | "details";
@@ -46,7 +49,7 @@ function dayParts(date: string) {
   return { weekday: weekdayFormatter.format(instant).replace(".", ""), day: d, month: monthFormatter.format(instant).replace(".", "") };
 }
 
-export function BookingWizard({ slug, businessName, services, preselectedServiceId, manualConfirmation, turnstileSiteKey }: Props) {
+export function BookingWizard({ slug, businessName, services, preselectedServiceId, manualConfirmation, turnstileSiteKey, privacyNotice = null }: Props) {
   const router = useRouter();
   const formId = useId();
   const initialService = services.find((s) => s.id === preselectedServiceId) ?? (services.length === 1 ? services[0]! : null);
@@ -365,6 +368,11 @@ export function BookingWizard({ slug, businessName, services, preselectedService
                 </p>
               ) : null}
             </>
+          ) : null}
+          {privacyNotice ? (
+            <p className="text-xs leading-relaxed text-ink-muted">
+              <InlineMarkdown text={privacyNotice} />
+            </p>
           ) : null}
           <Button type="submit" disabled={!canSubmit}>
             {submitting ? t.confirming : t.confirm}

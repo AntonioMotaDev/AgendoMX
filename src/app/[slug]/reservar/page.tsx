@@ -4,6 +4,8 @@ import { BookingWizard } from "@/components/booking/booking-wizard";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { optionalEnv } from "@/lib/env";
+import { legalPublished } from "@/lib/legal";
+import { fillClientNotice, LEGAL_TEXTS } from "@/lib/legal-content";
 import { turnstileMode } from "@/lib/turnstile";
 import { turnstileConfig } from "@/lib/turnstile-config";
 import { getPublicBusinessBySlug, listPublicServices } from "@/server/queries/public";
@@ -32,6 +34,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
       preselectedServiceId={preselected}
       manualConfirmation={found.business.confirmationMode === "manual"}
       turnstileSiteKey={siteKey}
+      privacyNotice={legalPublished() ? fillClientNotice(LEGAL_TEXTS.privacyClientsShort, found.business) : null}
     />
   );
 }

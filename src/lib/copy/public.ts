@@ -17,6 +17,7 @@ export const publicCopy = {
     cancellation: (hours: number) =>
       hours === 0 ? "Puedes cancelar tu cita hasta la hora de inicio." : `Puedes cancelar sin problema hasta ${hours} ${hours === 1 ? "hora" : "horas"} antes.`,
     powered: "AgendoMX de FORMA/01",
+    privacyLink: "Aviso de privacidad",
     whatsappGreeting: (business: string) => `Hola, vi tu perfil de ${business} en AgendoMX.`,
   },
   booking: {

@@ -1,5 +1,6 @@
 import "server-only";
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { getDb } from "@/db";
@@ -7,6 +8,8 @@ import { account, session, user, verification } from "@/db/schema";
 import { sendAuthEmail } from "@/lib/email/auth-emails";
 import { inBackground } from "@/lib/email/send";
 import { appUrl, requireEnv } from "@/lib/env";
+import { legalPublished } from "@/lib/legal";
+import { termsAcceptanceError } from "@/lib/legal-content";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/validators/auth";
 
 /**
@@ -49,6 +52,27 @@ export async function getAuth() {
       // Workers sits behind Cloudflare: its header carries the real client IP.
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       useSecureCookies: baseURL.startsWith("https://"),
+    },
+    user: {
+      additionalFields: {
+        // Sent by the registration form (the version of the texts it showed); stored with the time we received it.
+        termsVersion: { type: "string", required: false, input: true },
+        termsAcceptedAt: { type: "date", required: false, input: false },
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (newUser) => ({ data: { ...newUser, termsAcceptedAt: newUser.termsVersion ? new Date() : null } }),
+        },
+      },
+    },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-up/email") return;
+        const refusal = termsAcceptanceError(ctx.body, legalPublished());
+        if (refusal) throw new APIError("BAD_REQUEST", { message: refusal, code: refusal });
+      }),
     },
     plugins: [nextCookies()],
   });

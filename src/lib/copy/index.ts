@@ -47,6 +47,12 @@ export const copy = {
       haveAccount: "¿Ya tienes cuenta?",
       login: "Entra",
       terms: "Al crear tu cuenta aceptas los términos y el aviso de privacidad.",
+      acceptPrefix: "He leído y acepto los ",
+      acceptTerms: "términos y condiciones",
+      acceptAnd: " y el ",
+      acceptPrivacy: "aviso de privacidad",
+      acceptRequired: "Para crear tu cuenta debes aceptar los términos y el aviso de privacidad.",
+      termsOutdated: "Actualizamos los términos. Recarga la página e inténtalo de nuevo.",
       emailTaken: "Ya existe una cuenta con ese correo. Intenta entrar o recupera tu contraseña.",
     },
     verifyPending: {

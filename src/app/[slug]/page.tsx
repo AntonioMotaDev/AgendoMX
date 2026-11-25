@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import { categoryLabel } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
+import { legalPublished } from "@/lib/legal";
 import { getPublicBusinessBySlug, listPublicServices } from "@/server/queries/public";
 
 const t = copy.public.profile;
@@ -56,7 +57,14 @@ export default async function PublicProfilePage({ params }: PageProps<"/[slug]">
         <ContactSection business={business} />
         <p className="text-sm text-ink-muted">{t.cancellation(business.cancellationMinHours)}</p>
         {business.cancellationPolicyText ? <p className="whitespace-pre-line text-sm text-ink-muted">{business.cancellationPolicyText}</p> : null}
-        <footer className="border-t border-line pt-4 text-center text-xs text-ink-muted">{t.powered}</footer>
+        <footer className="flex flex-col items-center gap-1 border-t border-line pt-4 text-center text-xs text-ink-muted">
+          {legalPublished() ? (
+            <Link href={`/${business.slug}/privacidad`} className="underline underline-offset-2">
+              {t.privacyLink}
+            </Link>
+          ) : null}
+          {t.powered}
+        </footer>
       </div>
       {canBook ? (
         <div className="fixed inset-x-0 bottom-0 border-t border-line bg-surface/95 p-3 backdrop-blur">

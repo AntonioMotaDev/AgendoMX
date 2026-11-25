@@ -16,6 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "legal:sync": "node scripts/legal/sync.mjs",
+    "legal:check": "node scripts/legal/sync.mjs --check",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit"
   },
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261124.1",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",

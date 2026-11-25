@@ -1,17 +1,18 @@
 import type { Db } from "@/db";
 import { pruneRateLimits } from "@/db/rate-limit";
-import { claimDueReminders, expirePendingAppointments, releaseReminders, type DueReminder } from "./cron-writes";
+import { claimDueReminders, expirePendingAppointments, pruneExpiredAuthRows, releaseReminders, type DueReminder } from "./cron-writes";
 
 export interface CronSummary {
   expired: number;
   remindersSent: number;
   remindersFailed: number;
+  sessionsPruned: number;
 }
 
 /**
  * One scheduled tick: expire stale requests, send due reminders, prune old
  * rate-limit counters. `send` is injected so the loop is testable without
- * email. A failed send is released for the next tick; one bad recipient never
+ * email. Also prunes rate-limit counters and expired sessions/tokens. A failed send is released for the next tick; one bad recipient never
  * blocks the rest of the batch.
  */
 export async function runCronTick(db: Db, now: Date, send: (reminder: DueReminder) => Promise<void>): Promise<CronSummary> {
@@ -31,5 +32,6 @@ export async function runCronTick(db: Db, now: Date, send: (reminder: DueReminde
   await releaseReminders(db, failed);
 
   await pruneRateLimits(db);
-  return { expired, remindersSent: due.length - failed.length, remindersFailed: failed.length };
+  const { sessions } = await pruneExpiredAuthRows(db, now);
+  return { expired, remindersSent: due.length - failed.length, remindersFailed: failed.length, sessionsPruned: sessions };
 }

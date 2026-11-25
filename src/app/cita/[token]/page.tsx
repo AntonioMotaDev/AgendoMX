@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/logo";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { formatInstantDateTime } from "@/lib/dates";
+import { legalPublished } from "@/lib/legal";
 import { formatMxnShort } from "@/lib/money";
 import { formatMxPhoneForInput } from "@/lib/phone";
 import { telLink, whatsappLink } from "@/lib/public-links";
@@ -117,6 +118,11 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
       <Link href={`/${b.slug}`} className="text-center text-sm font-semibold text-brand-ink underline underline-offset-4">
         {copy.public.done.back}
       </Link>
+      {legalPublished() ? (
+        <Link href={`/${b.slug}/privacidad`} className="text-center text-xs text-ink-muted underline underline-offset-2">
+          {copy.public.profile.privacyLink}
+        </Link>
+      ) : null}
     </main>
   );
 }
