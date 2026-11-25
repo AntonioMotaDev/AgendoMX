@@ -122,6 +122,12 @@ export const publicCopy = {
         hours === 0 ? "Puedes cancelar hasta la hora de inicio." : `Puedes cancelar hasta ${hours} ${hours === 1 ? "hora" : "horas"} antes de tu cita.`,
       ignore: "Si no agendaste esta cita, puedes cancelarla desde el botón.",
     },
+    reminder: {
+      subject: (business: string) => `Recordatorio de tu cita en ${business}`,
+      preview: "Tu cita es mañana.",
+      body: (business: string) => `Te recordamos tu cita en ${business}. Si ya no puedes asistir, cancélala desde el botón para liberar el horario.`,
+      cta: "Ver o cancelar mi cita",
+    },
     clientStatus: {
       rejectedSubject: (business: string) => `${business} no pudo confirmar tu solicitud`,
       cancelledSubject: (business: string) => `${business} canceló tu cita`,

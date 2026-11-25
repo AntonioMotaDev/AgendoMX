@@ -124,3 +124,34 @@ export function sendClientStatusEmail(input: ClientStatusEmailInput) {
     react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} />,
   });
 }
+
+export interface ReminderEmailInput {
+  to: string;
+  clientName: string;
+  token: string;
+  startsAt: Date;
+  serviceName: string;
+  business: { name: string; category: BusinessCategory; timezone: string; address: string | null; city: string | null; cancellationMinHours: number };
+}
+
+/** 24 h reminder. Health categories never name the service (CLAUDE.md §6). */
+export function sendReminderEmail(input: ReminderEmailInput) {
+  const r = c.reminder;
+  const { business: b } = input;
+  const url = `${appUrl()}/cita/${input.token}`;
+  const location = [b.address, b.city].filter(Boolean).join(", ");
+  const rows: BookingEmailProps["details"] = [
+    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone) },
+    ...(isSensitiveCategory(b.category) ? [] : [{ label: c.client.service, value: input.serviceName }]),
+    ...(location ? [{ label: c.client.where, value: location }] : []),
+  ];
+  const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
+  const body = r.body(b.name);
+  const note = c.client.cancelHint(b.cancellationMinHours);
+  return sendEmail({
+    to: input.to,
+    subject: r.subject(b.name),
+    text: plain(greeting, body, { rows }, r.cta, url, note),
+    react: <BookingEmail preview={r.preview} greeting={greeting} body={body} details={rows} cta={r.cta} url={url} note={note} />,
+  });
+}

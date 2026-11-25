@@ -12,6 +12,8 @@
     { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx" }
   ],
   "observability": { "enabled": true },
+  // Hourly: expires unanswered requests, sends 24 h reminders, prunes rate-limit counters.
+  "triggers": { "crons": ["7 * * * *"] },
   // Cloudflare creates the DNS record and certificate for custom domains on deploy
   // (the zone must be in the same Cloudflare account).
   "routes": [{ "pattern": "agendomx.com", "custom_domain": true }],
@@ -44,6 +46,7 @@
   "env": {
     "staging": {
       "name": "agendomx-staging",
+      "triggers": { "crons": ["37 * * * *"] },
       "routes": [{ "pattern": "staging.agendomx.com", "custom_domain": true }],
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "agendomx-staging" }
