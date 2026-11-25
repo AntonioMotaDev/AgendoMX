@@ -122,6 +122,15 @@ export const publicCopy = {
         hours === 0 ? "Puedes cancelar hasta la hora de inicio." : `Puedes cancelar hasta ${hours} ${hours === 1 ? "hora" : "horas"} antes de tu cita.`,
       ignore: "Si no agendaste esta cita, puedes cancelarla desde el botón.",
     },
+    clientStatus: {
+      rejectedSubject: (business: string) => `${business} no pudo confirmar tu solicitud`,
+      cancelledSubject: (business: string) => `${business} canceló tu cita`,
+      rejectedPreview: "Puedes elegir otro horario.",
+      cancelledPreview: "Puedes agendar otro horario.",
+      rejectedBody: (business: string) => `${business} no pudo aceptar tu solicitud de cita. Puedes elegir otro horario cuando quieras.`,
+      cancelledBody: (business: string) => `${business} tuvo que cancelar tu cita. Lamentamos el cambio; puedes agendar otro horario cuando quieras.`,
+      cta: "Elegir otro horario",
+    },
     owner: {
       newSubject: (when: string) => `Nueva cita: ${when}`,
       requestSubject: (when: string) => `Nueva solicitud de cita: ${when}`,

@@ -95,3 +95,32 @@ export function sendOwnerBookingEmail(input: OwnerEmailInput) {
     react: <BookingEmail preview={preview} greeting={greeting} body={body} details={rows} cta={o.cta} url={url} />,
   });
 }
+
+export interface ClientStatusEmailInput {
+  to: string;
+  clientName: string;
+  kind: "rejected" | "cancelled";
+  startsAt: Date;
+  serviceName: string;
+  business: { name: string; slug: string; category: BusinessCategory; timezone: string };
+}
+
+/** Tells the client the business rejected their request or cancelled their appointment, with a link to pick another time. */
+export function sendClientStatusEmail(input: ClientStatusEmailInput) {
+  const s = c.clientStatus;
+  const { business: b } = input;
+  const url = `${appUrl()}/${b.slug}`;
+  const rows: BookingEmailProps["details"] = [
+    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone) },
+    ...(isSensitiveCategory(b.category) ? [] : [{ label: c.client.service, value: input.serviceName }]),
+  ];
+  const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
+  const rejected = input.kind === "rejected";
+  const body = rejected ? s.rejectedBody(b.name) : s.cancelledBody(b.name);
+  return sendEmail({
+    to: input.to,
+    subject: rejected ? s.rejectedSubject(b.name) : s.cancelledSubject(b.name),
+    text: plain(greeting, body, { rows }, s.cta, url),
+    react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} />,
+  });
+}

@@ -67,6 +67,7 @@ export interface OwnerAppointmentDetail {
   clientName: string;
   clientEmail: string | null;
   business: {
+    slug: string;
     name: string;
     category: typeof businesses.$inferSelect["category"];
     timezone: string;
@@ -96,6 +97,7 @@ export async function getOwnerAppointment(db: Reader, businessId: string, appoin
     clientName: row.c.name,
     clientEmail: row.c.email,
     business: {
+      slug: row.b.slug,
       name: row.b.name,
       category: row.b.category,
       timezone: row.b.timezone,
