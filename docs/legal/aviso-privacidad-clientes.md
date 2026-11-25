@@ -56,7 +56,7 @@ Mientras el negocio conserve tu registro de cliente. `[PLAZO máximo — VERIFIC
 
 Puedes **acceder** a tus datos, **rectificarlos**, pedir su **cancelación** u **oponerte** a su uso. **[VERIFICAR]**
 
-- Dirígete **al negocio**: es el responsable y decide sobre tus datos.
+- Dirígete **al negocio**: es el responsable y decide sobre tus datos. El negocio puede **borrar tus datos personales** (nombre, celular y correo) desde su panel; sus citas anteriores quedan en su agenda **sin tus datos**, y los enlaces de cita que ya te enviaron dejan de funcionar. Si tienes una cita próxima, primero debe cancelarse.
 - O escribe a `[CORREO DE PRIVACIDAD]`: **reenviaremos tu solicitud al negocio** y la apoyaremos técnicamente.
 
 Responderemos en `[PLAZO — VERIFICAR]`. Puedes cancelar tu cita en cualquier momento con el enlace de tu cita, hasta el plazo que fije el negocio.

@@ -1,5 +1,5 @@
 {
-  "id": "f07c2313-9523-4b41-a9db-2604b23c2f9c",
+  "id": "71df9768-b696-4507-8bcb-40cface587dd",
   "prevId": "bf6ceef7-538c-4a2e-9b37-c0b777c81e6b",
   "version": "7",
   "dialect": "postgresql",
@@ -1162,6 +1162,12 @@
         "notes_short": {
           "name": "notes_short",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anonymized_at": {
+          "name": "anonymized_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },

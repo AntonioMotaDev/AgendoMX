@@ -27,7 +27,7 @@ export type SaveImageResult = { ok: true; data: { url: string; replacedUrl: stri
 const column = (kind: ImageKind) => (kind === "logo" ? "logoUrl" : "coverUrl") as "logoUrl" | "coverUrl";
 
 /** Best effort: a leftover object is cheap, a failed request over it is not worth it. */
-async function deleteQuietly(bucket: ImageBucket, key: string | null) {
+export async function deleteQuietly(bucket: ImageBucket, key: string | null) {
   if (!key) return;
   try {
     await bucket.delete(key);

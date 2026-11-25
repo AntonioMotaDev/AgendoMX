@@ -53,8 +53,8 @@ Usamos **una cookie de sesión**, estrictamente necesaria para que permanezcas c
 
 ## 5. Cuánto tiempo los conservamos
 
-- **Cuenta y datos del negocio:** mientras tengas cuenta. `[PLAZO tras la baja]`.
-- **Sesiones:** duran 30 días. `[Definir limpieza de sesiones vencidas]`
+- **Cuenta y datos del negocio:** mientras tengas cuenta. Puedes **eliminarla tú mismo** en cualquier momento desde **Perfil → Mi cuenta**: se borran de inmediato tu negocio, tu perfil público, tus servicios, horarios y fotos, y los clientes y citas registrados.
+- **Sesiones:** duran 30 días y se eliminan automáticamente un día después de vencer. Los enlaces de verificación y de cambio de contraseña, igual.
 - **Copias de seguridad:** se conservan **30 días** y luego se eliminan automáticamente. Si pides la eliminación de tus datos, los que estén en copias de seguridad desaparecen al vencer ese plazo.
 - **Contadores anti-abuso:** menos de una hora, y almacenados de forma que no revela tu IP.
 
@@ -62,7 +62,7 @@ Usamos **una cookie de sesión**, estrictamente necesaria para que permanezcas c
 
 Tienes derecho a **Acceder** a tus datos, **Rectificarlos**, **Cancelarlos** (pedir su eliminación) y **Oponerte** a su uso para ciertos fines, así como a revocar tu consentimiento y a limitar el uso o divulgación. **[VERIFICAR lista de derechos conforme a la ley vigente]**
 
-Escribe a `[CORREO DE PRIVACIDAD]` indicando tu nombre, el correo de tu cuenta, el derecho que quieres ejercer y lo necesario para acreditar tu identidad. Responderemos en un máximo de `[PLAZO — VERIFICAR]` días hábiles.
+Para **cancelar** tus datos, usa **Perfil → Mi cuenta → Eliminar mi cuenta**. Para los demás derechos, escribe a `[CORREO DE PRIVACIDAD]` indicando tu nombre, el correo de tu cuenta, el derecho que quieres ejercer y lo necesario para acreditar tu identidad. Responderemos en un máximo de `[PLAZO — VERIFICAR]` días hábiles.
 
 Puedes corregir la mayoría de tus datos directamente en **Perfil** dentro de la aplicación.
 

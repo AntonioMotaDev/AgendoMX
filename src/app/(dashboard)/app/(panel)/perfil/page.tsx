@@ -1,4 +1,4 @@
-import { ChevronRight, ImageIcon, Link2, MapPin, Settings2, Share2, type LucideIcon } from "lucide-react";
+import { ChevronRight, ImageIcon, Link2, MapPin, Settings2, Share2, UserCog, Users, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BusinessAvatar } from "@/components/dashboard/business-avatar";
@@ -17,6 +17,8 @@ const SECTIONS: Array<{ href: string; title: string; hint: string; Icon: LucideI
   { href: "/app/perfil/redes", ...t.sections.social, Icon: Share2 },
   { href: "/app/perfil/link", ...t.sections.link, Icon: Link2 },
   { href: "/app/perfil/reservaciones", ...t.sections.booking, Icon: Settings2 },
+  { href: "/app/perfil/clientes", ...t.sections.clients, Icon: Users },
+  { href: "/app/perfil/cuenta", ...t.sections.account, Icon: UserCog },
 ];
 
 export default async function ProfilePage() {

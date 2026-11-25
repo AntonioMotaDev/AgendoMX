@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db";
 import * as schema from "@/db/schema";
 import { runCronTick } from "@/server/actions/cron-run";
-import { claimDueReminders, expirePendingAppointments, releaseReminders } from "@/server/actions/cron-writes";
+import { claimDueReminders, expirePendingAppointments, pruneExpiredAuthRows, releaseReminders } from "@/server/actions/cron-writes";
 import { generatePublicToken } from "@/lib/tokens";
 
 const url = process.env.DATABASE_URL_TEST;
@@ -152,13 +152,13 @@ describe.skipIf(!url)("cron jobs (Postgres)", () => {
         if (r.id === bad) throw new Error("provider down");
         sent.push(r.id);
       });
-      expect(summary).toEqual({ expired: 1, remindersSent: 2, remindersFailed: 1 });
+      expect(summary).toEqual({ expired: 1, remindersSent: 2, remindersFailed: 1, sessionsPruned: 0 });
       expect(sent.sort()).toEqual([ok1, ok2].sort());
       expect((await get(bad)).reminderSentAt).toBeNull(); // retried next tick
       expect((await get(ok1)).reminderSentAt).not.toBeNull();
       // Second tick: only the failed one is left.
       const again: string[] = [];
-      expect(await runCronTick(db, NOW, async (r) => void again.push(r.id))).toEqual({ expired: 0, remindersSent: 1, remindersFailed: 0 });
+      expect(await runCronTick(db, NOW, async (r) => void again.push(r.id))).toEqual({ expired: 0, remindersSent: 1, remindersFailed: 0, sessionsPruned: 0 });
       expect(again).toEqual([bad]);
     });
 
@@ -167,6 +167,26 @@ describe.skipIf(!url)("cron jobs (Postgres)", () => {
       await runCronTick(db, NOW, async () => {});
       const left = await db.select().from(schema.rateLimits);
       expect(left.map((r) => r.key)).toEqual(["new"]);
+    });
+  });
+
+  describe("pruneExpiredAuthRows", () => {
+    it("deletes sessions and tokens that expired over a day ago, keeping recent and live ones", async () => {
+      await db.delete(schema.verification);
+      await db.delete(schema.session);
+      await db.insert(schema.session).values([
+        { id: "old", userId: "u1", token: "t-old", expiresAt: h(-48) },
+        { id: "just-expired", userId: "u1", token: "t-just", expiresAt: h(-2) },
+        { id: "live", userId: "u1", token: "t-live", expiresAt: h(24 * 20) },
+      ]);
+      await db.insert(schema.verification).values([
+        { id: "v-old", identifier: "a@example.com", value: "x", expiresAt: h(-30) },
+        { id: "v-live", identifier: "b@example.com", value: "x", expiresAt: h(1) },
+      ]);
+      expect(await pruneExpiredAuthRows(db, NOW)).toEqual({ sessions: 1, tokens: 1 });
+      expect((await db.select({ id: schema.session.id }).from(schema.session)).map((r) => r.id).sort()).toEqual(["just-expired", "live"]);
+      expect((await db.select({ id: schema.verification.id }).from(schema.verification)).map((r) => r.id)).toEqual(["v-live"]);
+      expect(await pruneExpiredAuthRows(db, NOW)).toEqual({ sessions: 0, tokens: 0 });
     });
   });
 });

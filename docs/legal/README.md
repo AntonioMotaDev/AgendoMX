@@ -21,11 +21,11 @@
 
 | Dato | De quién | Para qué | Dónde se guarda | Quién lo ve | Conservación hoy |
 |---|---|---|---|---|---|
-| Nombre, correo, contraseña (hash) | Dueño | Cuenta y acceso | Neon (Postgres) | Solo el dueño y AgendoMX | Mientras exista la cuenta. **No hay borrado de cuenta** |
-| Sesión: token, **IP**, agente de usuario, caducidad | Dueño | Mantener la sesión, seguridad | Neon | AgendoMX | Sesión de 30 días; la fila no se borra sola |
+| Nombre, correo, contraseña (hash) | Dueño | Cuenta y acceso | Neon (Postgres) | Solo el dueño y AgendoMX | Mientras exista la cuenta; el dueño la elimina en **Perfil → Mi cuenta** |
+| Sesión: token, **IP**, agente de usuario, caducidad | Dueño | Mantener la sesión, seguridad | Neon | AgendoMX | 30 días; se borra 1 día después de vencer (cron horario) |
 | Datos públicos del negocio (nombre, descripción, teléfono, WhatsApp, dirección, redes, logo, portada) | Dueño | Perfil público | Neon; imágenes en Cloudflare R2 | **Público** | Mientras exista |
-| Nombre, **celular**, correo opcional | Cliente final | Agendar, contactar y recordar | Neon | El negocio al que pertenece el cliente | Indefinida. **No hay borrado ni anonimización** |
-| Cita: fecha/hora, nombre y precio del servicio (copia), estado, link privado (token) | Cliente final | Gestionar la cita | Neon | El negocio; el cliente con su link | Indefinida |
+| Nombre, **celular**, correo opcional | Cliente final | Agendar, contactar y recordar | Neon | El negocio al que pertenece el cliente | Mientras exista la cuenta del negocio; el negocio puede **borrar los datos de un cliente** (Perfil → Tus clientes) |
+| Cita: fecha/hora, nombre y precio del servicio (copia), estado, link privado (token) | Cliente final | Gestionar la cita | Neon | El negocio; el cliente con su link | Igual que el cliente; al borrar sus datos la cita queda sin datos personales y su link se invalida |
 | Bitácora de cambios de la cita (tipo, quién, cuándo) | — | Trazabilidad | Neon | El negocio | Indefinida |
 | Contadores anti-abuso (IP, celular o correo **hasheados**) | Visitantes | Limitar abuso | Neon | AgendoMX | ≤ 1 hora (limpieza horaria) |
 | Señales del navegador para Turnstile | Visitantes | Distinguir personas de bots | Cloudflare | Cloudflare | Según Cloudflare |
@@ -49,18 +49,28 @@ Campo `notes_short` de clientes: existe en la base pero **la aplicación no lo u
 
 Todos están fuera de México: los avisos los presentan como **encargados/proveedores de servicios**, y el abogado debe decidir si cada caso requiere tratarse como *transferencia* o *remisión* y qué leyenda llevar **[VERIFICAR]**.
 
-## Lo que el producto todavía NO hace (decisiones de producto pendientes)
+## Decisiones de producto tomadas y estado
 
-Los avisos solo prometen lo que existe. Estas brechas hay que cerrarlas o aceptarlas con conocimiento:
+Decididas con el responsable del producto y ya construidas **apagadas por la bandera `LEGAL_PUBLISHED`** (hoy encendida solo en staging y en las pruebas E2E; en producción no cambia nada hasta que se publiquen los textos revisados):
 
-1. **Páginas `/privacidad` y `/terminos`:** no existen. El registro ya dice "aceptas los términos y el aviso de privacidad" **sin enlaces** (`copy.auth.register.terms`). Publicar los textos revisados y enlazarlos.
-2. **Aviso en el formulario de reserva:** el cliente final hoy no ve ningún aviso al dejar su teléfono. Hay que mostrar la versión corta con enlace al integral, **identificando al negocio como responsable**.
-3. **Aceptación de términos del dueño:** no se registra (ni fecha ni versión). Si se exige aceptación expresa, hay que guardarla.
-4. **Derechos ARCO / borrado:** no hay función para borrar la cuenta de un dueño ni para borrar o anonimizar clientes. Hoy sería un proceso manual por correo. Decidir un canal (`[CORREO DE PRIVACIDAD]`), un plazo y quién lo ejecuta.
-5. **Conservación de clientes y citas:** hoy indefinida. Definir un plazo (p. ej. N años sin actividad) o dejarla al negocio con una herramienta de borrado.
-6. **Sesiones:** guardan IP y agente de usuario; no se limpian las vencidas.
-7. **Categorías de salud** (psicología, fisioterapia, nutrición, odontología, consultorio médico): el solo hecho de tener una cita puede ser un dato **sensible**. Ya se evita nombrar el servicio en correos y recordatorios, y el producto dice "no es expediente clínico", pero el abogado debe decidir si hace falta **consentimiento expreso** en la reserva **[VERIFICAR]**.
-8. **WhatsApp:** los mensajes salen de la cuenta del propio negocio (enlace `wa.me`); AgendoMX no los envía ni los ve. Los avisos lo aclaran.
+| Tema | Decisión | Estado |
+|---|---|---|
+| Borrado (ARCO) | Todo autoservicio: el dueño elimina su cuenta (Perfil → Mi cuenta, confirmando con el nombre del negocio) y el negocio borra los datos de un cliente (Perfil → Tus clientes) | **Hecho** |
+| Conservación de clientes y citas | Mientras exista la cuenta del negocio; se borran con la cuenta o a petición. Respaldos: 30 días | **Hecho** (revisar con legal si exigen un plazo máximo) |
+| Aceptación | Casilla obligatoria en el registro; se guarda versión y fecha (`user.terms_version`, `user.terms_accepted_at`). En la reserva: aviso corto con enlace, sin casilla | **Hecho** |
+| Páginas | `/terminos`, `/privacidad` (dueños) y `/{slug}/privacidad` (clientes; nombra al negocio como responsable). Se generan desde `docs/legal/*.md` con `pnpm legal:sync` | **Hecho**, ocultas (404) en producción |
+| Limpieza de sesiones | El cron borra sesiones y tokens vencidos hace más de 1 día | **Hecho** |
+
+Qué hacer cuando legal apruebe: (1) editar los `.md`, quitar todo `[VERIFICAR]`/`[ASÍ]`/"BORRADOR" y subir la versión; (2) `pnpm legal:sync`; (3) poner `"LEGAL_PUBLISHED": "true"` en las `vars` de producción de `wrangler.jsonc` (una prueba falla si aún quedan marcadores); (4) aplicar la migración 0007 en producción **antes** de desplegar; (5) desplegar.
+
+## Lo que sigue pendiente
+
+1. **Cuentas existentes:** el dueño que ya tiene cuenta no aceptó la versión nueva (`terms_version` nulo). Decidir si se le pide aceptarla al volver a entrar.
+2. **Dueños sin negocio** (no terminaron el onboarding): no ven Perfil, así que no tienen el botón de eliminar cuenta. Hoy sería manual por correo.
+3. **Cliente final y su derecho de acceso:** solo se atiende a través del negocio o por correo (`[CORREO DE PRIVACIDAD]`); no hay pantalla de "descargar mis datos".
+4. **Correos transaccionales:** no llevan enlace al aviso de privacidad.
+5. **Categorías de salud:** falta la decisión de legal sobre consentimiento expreso (la casilla solo para esas categorías es un cambio pequeño).
+6. **Cuentas eliminadas y WhatsApp:** los mensajes enviados por `wa.me` salen del WhatsApp del negocio y están fuera de AgendoMX.
 
 ## Preguntas para la persona de legal
 
@@ -78,7 +88,5 @@ Los avisos solo prometen lo que existe. Estas brechas hay que cerrarlas o acepta
 ## Antes de publicar
 
 - [ ] Revisión legal de los tres documentos y llenado de todos los `[ASÍ]`.
-- [ ] Crear `/privacidad` y `/terminos` (hoy son slugs reservados) y enlazarlas en registro, pie del perfil público, correos y formulario de reserva.
-- [ ] Mostrar el aviso corto de clientes en el formulario de reserva con el nombre del negocio.
-- [ ] Decidir y, si aplica, construir: registro de aceptación, ARCO/borrado, plazo de conservación.
-- [ ] Actualizar `copy.auth.register.terms` con enlaces.
+- [x] Páginas, aviso en la reserva, casilla y registro de aceptación, ARCO/borrado: construidos (apagados por bandera).
+- [ ] Enlazar el aviso en los correos transaccionales (decisión pendiente).

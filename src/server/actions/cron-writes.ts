@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "@/db";
-import { appointmentEvents, appointments, businesses, clients } from "@/db/schema";
+import { appointmentEvents, appointments, businesses, clients, session, verification } from "@/db/schema";
 import { bookedInAdvance, REMINDER_BATCH, reminderWindow } from "@/server/services/reminders";
 
 /**
@@ -89,4 +89,17 @@ export async function claimDueReminders(db: Db, now: Date, limit = REMINDER_BATC
 export async function releaseReminders(db: Db, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
   await db.update(appointments).set({ reminderSentAt: null }).where(inArray(appointments.id, ids));
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Deletes sessions and email-verification / password-reset tokens that expired more than a day ago.
+ * Sessions hold an IP and a user agent, so they should not outlive their usefulness (privacy notice).
+ */
+export async function pruneExpiredAuthRows(db: Db, now: Date): Promise<{ sessions: number; tokens: number }> {
+  const cutoff = new Date(now.getTime() - DAY_MS);
+  const sessions = await db.delete(session).where(lt(session.expiresAt, cutoff)).returning({ id: session.id });
+  const tokens = await db.delete(verification).where(lt(verification.expiresAt, cutoff)).returning({ id: verification.id });
+  return { sessions: sessions.length, tokens: tokens.length };
 }

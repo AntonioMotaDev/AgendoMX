@@ -62,9 +62,9 @@ AgendoMX se ofrece "tal cual". En la medida que la ley lo permita, no somos resp
 
 ## 11. Terminación y qué pasa con tus datos
 
-- Puedes dejar de usar AgendoMX cuando quieras y pedir la eliminación de tu cuenta escribiendo a `[CORREO DE PRIVACIDAD]`. **[Hoy el proceso es manual; ver `README.md`.]**
+- Puedes dejar de usar AgendoMX cuando quieras y **eliminar tu cuenta tú mismo** desde **Perfil → Mi cuenta**. La eliminación es inmediata y permanente.
 - Podemos suspender o cerrar cuentas por incumplimiento o por riesgo para la plataforma.
-- Al terminar, `[plazo]` días después eliminaremos o anonimizaremos tus datos y los de tus clientes, salvo lo que debamos conservar por ley. Los respaldos desaparecen a los 30 días. Si quieres, antes puedes pedirnos una **copia de tus datos** `[formato — decidir]`.
+- Si eliminas tu cuenta, se borran de inmediato tu negocio y los datos de tus clientes y sus citas; **los clientes con citas próximas no son avisados**, por lo que debes cancelarlas antes. Si la cuenta se cierra por nuestra parte, `[plazo]` días después eliminaremos tus datos, salvo lo que debamos conservar por ley. Los respaldos desaparecen a los 30 días. Antes de cerrar, puedes pedirnos una **copia de tus datos** `[formato — decidir]`.
 
 ## 12. Cambios a estos términos
 

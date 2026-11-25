@@ -36,7 +36,7 @@ export async function eventsOf(appointmentId: string) {
 /** Inserts an appointment directly (as if a customer had booked earlier), `startsInHours` from now. */
 export async function seedAppointment(input: {
   slug: string;
-  status: "pending" | "confirmed";
+  status: "pending" | "confirmed" | "completed";
   startsInHours: number;
   clientName?: string;
   phone?: string;
