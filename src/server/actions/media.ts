@@ -6,6 +6,7 @@ import { copy } from "@/lib/copy";
 import { IMAGE_KINDS, MAX_UPLOAD_BYTES, type ImageKind } from "@/lib/images";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
 import { guarded } from "./helpers";
+import { purgeCachedImages } from "./media-cache";
 import { removeBusinessImage, saveBusinessImage } from "./media-writes";
 import { fail, ok, type ActionResult } from "./result";
 
@@ -40,7 +41,9 @@ export async function uploadBusinessImageAction(formData: FormData): Promise<Act
   return guarded("uploadBusinessImage", async () => {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const result = await saveBusinessImage(await getDb(), await getBucket(), businessId, kind, bytes);
-    return result.ok ? ok(result.data) : fail(t.errors[result.error]);
+    if (!result.ok) return fail(t.errors[result.error]);
+    await purgeCachedImages([result.data.replacedUrl]);
+    return ok({ url: result.data.url });
   });
 }
 
@@ -51,6 +54,8 @@ export async function removeBusinessImageAction(kind: ImageKind): Promise<Action
 
   return guarded("removeBusinessImage", async () => {
     const result = await removeBusinessImage(await getDb(), await getBucket(), businessId, kind);
-    return result.ok ? ok(undefined) : fail(t.errors.not_found);
+    if (!result.ok) return fail(t.errors.not_found);
+    await purgeCachedImages([result.data.removedUrl]);
+    return ok(undefined);
   });
 }

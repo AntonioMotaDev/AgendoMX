@@ -21,7 +21,8 @@ export interface ImageBucket {
 /** Uploads per business per hour. Plenty for a person, a ceiling for a script. */
 export const UPLOADS_PER_HOUR = 20;
 
-export type SaveImageResult = { ok: true; data: { url: string } } | { ok: false; error: ImageRejection | "rate_limited" | "not_found" };
+/** `replacedUrl` is the image that was just superseded, so callers can purge it from caches. */
+export type SaveImageResult = { ok: true; data: { url: string; replacedUrl: string | null } } | { ok: false; error: ImageRejection | "rate_limited" | "not_found" };
 
 const column = (kind: ImageKind) => (kind === "logo" ? "logoUrl" : "coverUrl") as "logoUrl" | "coverUrl";
 
@@ -62,15 +63,17 @@ export async function saveBusinessImage(db: Db, bucket: ImageBucket, businessId:
     throw error;
   }
 
-  await deleteQuietly(bucket, keyFromMediaUrl(current[column(kind)]));
-  return { ok: true, data: { url } };
+  const replacedUrl = current[column(kind)];
+  await deleteQuietly(bucket, keyFromMediaUrl(replacedUrl));
+  return { ok: true, data: { url, replacedUrl } };
 }
 
-export async function removeBusinessImage(db: Db, bucket: ImageBucket, businessId: string, kind: ImageKind): Promise<{ ok: true } | { ok: false; error: "not_found" }> {
+export async function removeBusinessImage(db: Db, bucket: ImageBucket, businessId: string, kind: ImageKind): Promise<{ ok: true; data: { removedUrl: string | null } } | { ok: false; error: "not_found" }> {
   const [current] = await db.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
   if (!current) return { ok: false, error: "not_found" };
 
   await db.update(businesses).set({ [column(kind)]: null }).where(eq(businesses.id, businessId));
-  await deleteQuietly(bucket, keyFromMediaUrl(current[column(kind)]));
-  return { ok: true };
+  const removedUrl = current[column(kind)];
+  await deleteQuietly(bucket, keyFromMediaUrl(removedUrl));
+  return { ok: true, data: { removedUrl } };
 }

@@ -8,7 +8,12 @@ import { contentTypeForKey, isImageKey } from "@/lib/images";
  */
 export const dynamic = "force-dynamic";
 
-const CACHE_CONTROL = "public, max-age=86400";
+/**
+ * Short on purpose: a photo the owner removes must stop being served soon. The
+ * copy in this data center is purged immediately when an image is replaced or
+ * removed (see purgeCachedImages); other locations expire within this hour.
+ */
+const CACHE_CONTROL = "public, max-age=3600";
 
 export async function GET(request: Request, { params }: RouteContext<"/media/[...key]">) {
   const { key: parts } = await params;

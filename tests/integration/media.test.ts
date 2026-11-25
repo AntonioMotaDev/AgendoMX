@@ -79,9 +79,10 @@ describe.skipIf(!url)("business images (Postgres + fake R2)", () => {
   it("replacing an image removes the old object and changes the URL", async () => {
     await saveBusinessImage(db, bucket, a, "cover", png(1600, 900));
     const first = (await row(a)).coverUrl!;
-    await saveBusinessImage(db, bucket, a, "cover", webp(1600, 900));
+    const replaced = await saveBusinessImage(db, bucket, a, "cover", webp(1600, 900));
     const second = (await row(a)).coverUrl!;
     expect(second).not.toBe(first);
+    expect(replaced).toMatchObject({ ok: true, data: { url: second, replacedUrl: first } }); // so callers can purge caches
     expect([...bucket.objects.keys()]).toEqual([keyFromMediaUrl(second)]);
   });
 
@@ -116,7 +117,8 @@ describe.skipIf(!url)("business images (Postgres + fake R2)", () => {
   it("removes an image: object deleted, column cleared, other business untouched", async () => {
     await saveBusinessImage(db, bucket, a, "logo", webp(512, 512));
     await saveBusinessImage(db, bucket, b, "logo", webp(512, 512));
-    expect(await removeBusinessImage(db, bucket, a, "logo")).toEqual({ ok: true });
+    const before = (await row(a)).logoUrl;
+    expect(await removeBusinessImage(db, bucket, a, "logo")).toEqual({ ok: true, data: { removedUrl: before } });
     expect((await row(a)).logoUrl).toBeNull();
     expect((await row(b)).logoUrl).not.toBeNull();
     expect(bucket.objects.size).toBe(1);
