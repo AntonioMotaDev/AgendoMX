@@ -62,6 +62,7 @@ URL pública del negocio: `https://agendomx.com/{slug}` (ej. `agendomx.com/barbe
 - **Cache Components (`cacheComponents`) está desactivado**: OpenNext para Cloudflare aún no lo soporta por completo. No lo actives ni uses `"use cache"` hasta que OpenNext lo soporte.
 - Postgres detrás de Hyperdrive: `postgres(url, { prepare: false })`. Verificado en workerd con `/api/health`.
 - Server actions: validan con Zod, resuelven `business_id` de la sesión (`getCurrentBusiness()`), y **reciben el input crudo del formulario** (`getValues()`), nunca la copia ya transformada por el resolver (rompió el paso 1 cuando un campo transformado volvía como `null`). Los ids que llegan de URLs/forms se revisan con `isUuid()` antes de consultar: un id mal formado es "no encontrado", no un 500.
+- Imágenes (logo/portada): el navegador las recorta/reduce con canvas (`lib/image-compress.ts`, sin metadatos), el servidor las valida **por sus bytes** (formato real, ≤ 1 MB, 32–4096 px) y las guarda en R2 con clave aleatoria `businesses/{id}/{logo|cover}-{12 chars}.{ext}`; `logo_url`/`cover_url` guardan la ruta `/media/…` (CHECK en BD). Subir/quitar borra el objeto anterior; 20 subidas por hora por negocio. En `next dev` el estado local de R2 vive en `$TMPDIR/agendomx-wrangler-state` (dentro del proyecto el watcher recompilaba en bucle).
 - Después de cambiar `wrangler.jsonc`, corre `pnpm cf-typegen` para regenerar `cloudflare-env.d.ts`.
 - El entry del Worker es `worker.ts` (envuelve `.open-next/worker.js` con Sentry). `wrangler.jsonc` apunta a él en `main`.
 - Rate limit de auth: `src/lib/rate-limit.ts`, respaldado por Postgres (tabla `rate_limits`, upsert atómico en `src/db/rate-limit.ts`; por IP y por correo hasheado). Se probó el binding de Workers Rate Limiting en staging y **no impuso el límite** (30 intentos sin un solo 429), por eso no se usa. El limitador interno de Better Auth está desactivado porque es en memoria por isolate. Usa el mismo mecanismo para el rate limit de la reserva pública; `BOOKING_RATE_LIMITER` queda sin uso. No uses `instrumentation.ts`: el hook no carga en el bundle de OpenNext y tumba todo el servidor (500 en cada ruta). Sentry captura los `console.error` del Worker. Sentry nunca recibe cookies, cuerpos, query strings (traen tokens) ni IP/correo: ver `src/lib/sentry.ts`.
@@ -85,7 +86,8 @@ src/
       (panel)/              # pantallas del panel; su layout exige onboarding terminado y muestra la barra de navegación
         servicios/          # lista (orden, ocultar), nuevo, editar/eliminar
         horarios/           # horario semanal + días especiales (cerrado u horario especial, con rangos)
-        perfil/             # menú: informacion, redes (6), link (QR + cambiar slug), reservaciones
+        perfil/             # menú: imagenes (logo/portada), informacion, redes (6), link (QR + cambiar slug), reservaciones
+    media/[...key]/         # sirve logos/portadas desde R2; solo claves que generamos (`lib/images.ts`)
     [slug]/                 # perfil público del negocio + flujo de reserva
     cita/[token]/           # página de la cita para el cliente: ver / cancelar
     api/auth/[...all]/      # handler de Better Auth

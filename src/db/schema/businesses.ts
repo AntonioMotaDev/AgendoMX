@@ -67,6 +67,10 @@ export const businesses = pgTable(
       sql`${t.categoryOther} IS NULL OR (${t.category} = 'other' AND char_length(${t.categoryOther}) BETWEEN 2 AND 60)`,
     ),
     check(
+      "businesses_media_paths",
+      sql`(${t.logoUrl} IS NULL OR ${t.logoUrl} LIKE '/media/businesses/%') AND (${t.coverUrl} IS NULL OR ${t.coverUrl} LIKE '/media/businesses/%')`,
+    ),
+    check(
       "businesses_social_https",
       sql`(${t.facebookUrl} IS NULL OR ${t.facebookUrl} LIKE 'https://%')
         AND (${t.instagramUrl} IS NULL OR ${t.instagramUrl} LIKE 'https://%')

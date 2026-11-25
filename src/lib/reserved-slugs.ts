@@ -37,6 +37,7 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "staging",
   "static",
   "status",
+  "media",
   "sw.js",
   "terminos",
   "www",

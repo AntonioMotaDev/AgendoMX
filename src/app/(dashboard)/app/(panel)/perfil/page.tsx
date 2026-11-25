@@ -1,6 +1,7 @@
-import { ChevronRight, Link2, MapPin, Settings2, Share2, type LucideIcon } from "lucide-react";
+import { ChevronRight, ImageIcon, Link2, MapPin, Settings2, Share2, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BusinessAvatar } from "@/components/dashboard/business-avatar";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
 import { categoryLabel } from "@/lib/categories";
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Perfil — AgendoMX", robots: { inde
 const t = copy.panel.profile;
 
 const SECTIONS: Array<{ href: string; title: string; hint: string; Icon: LucideIcon }> = [
+  { href: "/app/perfil/imagenes", ...t.sections.images, Icon: ImageIcon },
   { href: "/app/perfil/informacion", ...t.sections.info, Icon: MapPin },
   { href: "/app/perfil/redes", ...t.sections.social, Icon: Share2 },
   { href: "/app/perfil/link", ...t.sections.link, Icon: Link2 },
@@ -28,15 +30,18 @@ export default async function ProfilePage() {
         <p className="mt-1 text-base text-ink-muted">{t.subtitle}</p>
       </div>
 
-      <div className="rounded-lg border border-line bg-surface p-4">
-        <p className="text-lg font-semibold text-ink">{business.name}</p>
-        <p className="text-sm text-ink-muted">
-          {categoryLabel(business.category, business.categoryOther, copy.onboarding.categories)}
-          {business.city ? ` · ${business.city}` : ""}
-        </p>
-        <p className="mt-2 break-all text-sm font-medium text-ink">
-          {host}/{business.slug}
-        </p>
+      <div className="flex items-center gap-4 rounded-lg border border-line bg-surface p-4">
+        <BusinessAvatar name={business.name} logoUrl={business.logoUrl} />
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold text-ink">{business.name}</p>
+          <p className="text-sm text-ink-muted">
+            {categoryLabel(business.category, business.categoryOther, copy.onboarding.categories)}
+            {business.city ? ` · ${business.city}` : ""}
+          </p>
+          <p className="mt-1 break-all text-sm font-medium text-ink">
+            {host}/{business.slug}
+          </p>
+        </div>
       </div>
 
       <ul className="flex flex-col divide-y divide-line rounded-lg border border-line bg-surface">
