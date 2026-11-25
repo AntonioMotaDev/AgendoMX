@@ -68,3 +68,8 @@ export function zonedToUtc(date: LocalDate, minutes: number, timezone: string): 
   const z = TZDate.tz(timezone, year, month - 1, day, 0, minutes);
   return new Date(z.getTime());
 }
+
+/** [start, end) of a local calendar day as UTC instants. Handles days that are not 24 h long. */
+export function localDayBounds(date: LocalDate, timezone: string): { start: Date; end: Date } {
+  return { start: zonedToUtc(date, 0, timezone), end: zonedToUtc(addDays(date, 1), 0, timezone) };
+}
