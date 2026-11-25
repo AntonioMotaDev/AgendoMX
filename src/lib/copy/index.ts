@@ -106,6 +106,20 @@ export const copy = {
     },
     footer: "AgendoMX de FORMA/01",
   },
+  pwa: {
+    name: "AgendoMX",
+    description: "Tu agenda de citas, siempre a la mano.",
+    offlineTitle: "Sin conexión",
+    offlineBody: "No hay internet en este momento. Tus citas se muestran cuando vuelvas a conectarte.",
+    retry: "Reintentar",
+    install: {
+      title: "Instala AgendoMX en tu celular",
+      body: "Ábrela como una app, directo desde tu pantalla de inicio.",
+      cta: "Instalar",
+      dismiss: "Ahora no",
+      iosBody: "En iPhone: toca Compartir y luego “Agregar a pantalla de inicio”.",
+    },
+  },
   dashboard: {
     todayTitle: "Hoy",
     emptyToday: "Todavía no tienes citas para hoy.",

@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { PanelNav } from "@/components/dashboard/panel-nav";
 import { getCurrentBusiness } from "@/lib/session";
 
@@ -8,7 +10,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/app">) {
   if (!business || !business.onboardingCompletedAt) redirect("/app/onboarding");
   return (
     <>
+      <ServiceWorkerRegister />
       <PanelNav />
+      <InstallPrompt />
       {/* Room for the fixed bottom bar on phones. */}
       <div className="pb-24 md:pb-0">{children}</div>
     </>
