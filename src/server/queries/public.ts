@@ -1,7 +1,8 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
-import { appointments, availabilityExceptions, availabilityRules, businesses, services } from "@/db/schema";
+import { appointments, availabilityExceptions, availabilityRules, businesses, clients, services, user } from "@/db/schema";
 import { isUuid } from "@/lib/ids";
 import { addDays, toLocalDate } from "@/lib/time";
+import { isPublicToken } from "@/server/services/booking";
 import type { AvailabilityException, AvailabilityRule, BusyInterval } from "@/server/services/availability";
 import { getPrimaryStaff, type Reader } from "./business";
 
@@ -174,4 +175,89 @@ export async function getBookableService(db: Reader, businessId: string, service
     .where(and(eq(services.id, serviceId), eq(services.businessId, businessId), eq(services.isActive, true), eq(services.isBookableOnline, true)))
     .limit(1);
   return row ?? null;
+}
+
+/** Full row of a published business, for server-side booking logic only. Never send this to the browser. */
+export async function getBookingBusinessBySlug(db: Reader, slug: unknown): Promise<BusinessRow | null> {
+  if (typeof slug !== "string" || !SLUG_RE.test(slug)) return null;
+  const [row] = await db
+    .select()
+    .from(businesses)
+    .where(and(eq(businesses.slug, slug), isNotNull(businesses.onboardingCompletedAt)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Where owner notices go: the account that owns the business. */
+export async function getOwnerContact(db: Reader, businessId: string): Promise<{ name: string; email: string } | null> {
+  const [row] = await db
+    .select({ name: user.name, email: user.email })
+    .from(businesses)
+    .innerJoin(user, eq(user.id, businesses.ownerUserId))
+    .where(eq(businesses.id, businessId))
+    .limit(1);
+  return row ?? null;
+}
+
+export interface ClientAppointment {
+  id: string;
+  status: typeof appointments.$inferSelect["status"];
+  startsAt: Date;
+  endsAt: Date;
+  serviceName: string;
+  priceCents: number | null;
+  clientName: string;
+  business: {
+    id: string;
+    slug: string;
+    name: string;
+    category: BusinessRow["category"];
+    timezone: string;
+    address: string | null;
+    city: string | null;
+    phone: string | null;
+    whatsapp: string | null;
+    cancellationMinHours: number;
+    cancellationPolicyText: string | null;
+  };
+}
+
+/**
+ * The appointment behind a private link. The token is the only credential, so a
+ * malformed one is "not found" without touching the database. Exposes the
+ * client's own name, never their phone or email.
+ */
+export async function getAppointmentByToken(db: Reader, token: unknown): Promise<ClientAppointment | null> {
+  if (!isPublicToken(token)) return null;
+  const [row] = await db
+    .select({ appointment: appointments, business: businesses, clientName: clients.name })
+    .from(appointments)
+    .innerJoin(businesses, eq(businesses.id, appointments.businessId))
+    .innerJoin(clients, eq(clients.id, appointments.clientId))
+    .where(eq(appointments.publicToken, token))
+    .limit(1);
+  if (!row) return null;
+  const { appointment: a, business: b } = row;
+  return {
+    id: a.id,
+    status: a.status,
+    startsAt: a.startsAt,
+    endsAt: a.endsAt,
+    serviceName: a.serviceNameSnapshot,
+    priceCents: a.priceCentsSnapshot,
+    clientName: row.clientName,
+    business: {
+      id: b.id,
+      slug: b.slug,
+      name: b.name,
+      category: b.category,
+      timezone: b.timezone,
+      address: b.address,
+      city: b.city,
+      phone: b.phone,
+      whatsapp: b.whatsapp,
+      cancellationMinHours: b.cancellationMinHours,
+      cancellationPolicyText: b.cancellationPolicyText,
+    },
+  };
 }
