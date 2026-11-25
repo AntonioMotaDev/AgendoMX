@@ -18,8 +18,8 @@ const ITEMS: Array<{ href: string; label: string; Icon: LucideIcon; exact?: bool
 /** Bottom tab bar on phones, tabs under the header on larger screens. Same links, one visible at a time. */
 export function PanelNav() {
   const pathname = usePathname();
-  // "Mañana" is a tab of the agenda, so it keeps "Hoy" lit.
-  const isActive = (item: (typeof ITEMS)[number]) => (item.exact ? pathname === item.href || pathname.startsWith("/app/manana") : pathname.startsWith(item.href));
+  // "Mañana" and "Semana" are tabs of the agenda, so they keep "Hoy" lit.
+  const isActive = (item: (typeof ITEMS)[number]) => (item.exact ? pathname === item.href || pathname.startsWith("/app/manana") || pathname.startsWith("/app/semana") : pathname.startsWith(item.href));
 
   return (
     <>

@@ -18,3 +18,12 @@ export async function getService(db: Reader, businessId: string, serviceId: stri
     .limit(1);
   return row ?? null;
 }
+
+/** Services the owner can book by hand: active ones, including those hidden from the public. */
+export async function listActiveServices(db: Reader, businessId: string) {
+  return db
+    .select()
+    .from(services)
+    .where(and(eq(services.businessId, businessId), eq(services.isActive, true)))
+    .orderBy(asc(services.sortOrder), asc(services.name), asc(services.id));
+}

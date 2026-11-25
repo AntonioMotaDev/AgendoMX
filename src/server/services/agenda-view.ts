@@ -14,7 +14,7 @@ import { isSensitiveCategory } from "./booking";
 
 const t = copy.panel.agenda;
 
-export type AgendaMode = "today" | "tomorrow" | "pending";
+export type AgendaMode = "today" | "tomorrow" | "week" | "pending";
 
 export interface AgendaCardData {
   id: string;
@@ -52,7 +52,7 @@ export function buildAgendaCard(item: AgendaItem, mode: AgendaMode, { business, 
     whatsappLabel = t.remind;
   } else if (mode === "today" && live) {
     whatsappHref = whatsappLink(item.clientPhone, t.messages.contact(firstName(item.clientName), business.name, startTime));
-  } else if (mode === "pending") {
+  } else if (mode === "pending" || (mode === "week" && live)) {
     whatsappHref = whatsappLink(item.clientPhone);
   }
 

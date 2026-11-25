@@ -48,6 +48,10 @@ describe("buildAgendaCard", () => {
     expect(buildAgendaCard(item({ status: "pending" }), "pending", ctx()).whatsappHref).toBe("https://wa.me/525512345678");
     expect(buildAgendaCard(item({ status: "completed" }), "today", ctx()).whatsappHref).toBeNull();
   });
+  it("week: plain chat link for live appointments, none for closed ones", () => {
+    expect(buildAgendaCard(item(), "week", ctx()).whatsappHref).toBe("https://wa.me/525512345678");
+    expect(buildAgendaCard(item({ status: "no_show" }), "week", ctx()).whatsappHref).toBeNull();
+  });
   it("offers only the actions allowed right now", () => {
     expect(buildAgendaCard(item({ status: "pending" }), "pending", ctx()).actions).toEqual(["confirm", "reject", "cancel"]);
     expect(buildAgendaCard(item(), "today", ctx("barbershop", "2026-12-03T12:00:00Z")).actions).toEqual(["cancel"]);

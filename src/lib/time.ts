@@ -73,3 +73,19 @@ export function zonedToUtc(date: LocalDate, minutes: number, timezone: string): 
 export function localDayBounds(date: LocalDate, timezone: string): { start: Date; end: Date } {
   return { start: zonedToUtc(date, 0, timezone), end: zonedToUtc(addDays(date, 1), 0, timezone) };
 }
+
+/** Monday (ISO week start, the way people read a calendar in Mexico) of the week containing `date`. */
+export function weekStart(date: LocalDate): LocalDate {
+  return addDays(date, -((weekdayOf(date) + 6) % 7));
+}
+
+/** Parses a user-supplied "YYYY-MM-DD"; anything else is null. */
+export function parseLocalDateOrNull(value: unknown): LocalDate | null {
+  if (typeof value !== "string") return null;
+  try {
+    parseLocalDate(value);
+    return value;
+  } catch {
+    return null;
+  }
+}

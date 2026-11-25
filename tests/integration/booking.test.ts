@@ -9,7 +9,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "@/db";
 import * as schema from "@/db/schema";
-import { cancelByClient, createPublicBooking } from "@/server/actions/booking-writes";
+import { cancelByClient, createManualAppointment, createPublicBooking } from "@/server/actions/booking-writes";
 import type { BusinessRow } from "@/server/queries/public";
 
 const url = process.env.DATABASE_URL_TEST;
@@ -167,6 +167,81 @@ describe.skipIf(!url)("public booking (Postgres)", () => {
     expect(await book(at("19:00"), 1)).toEqual({ ok: false, error: "too_many" });
     // Another phone is unaffected.
     expect((await book(at("19:00"), 2)).ok).toBe(true);
+  });
+
+  describe("createManualAppointment", () => {
+    const manual = (start: Date, over: { offHours?: boolean; serviceId?: unknown; now?: Date; n?: number } = {}) =>
+      createManualAppointment(db, business, {
+        serviceId: "serviceId" in over ? over.serviceId : serviceId,
+        start,
+        client: person(over.n ?? 1),
+        now: over.now ?? NOW,
+        offHours: over.offHours ?? false,
+      });
+
+    it("is confirmed at once even when the business approves requests by hand, and logs an owner event", async () => {
+      await db.update(schema.businesses).set({ confirmationMode: "manual" }).where(eq(schema.businesses.id, business.id));
+      business = { ...business, confirmationMode: "manual" };
+      const r = await manual(TEN);
+      expect(r.ok && r.data.status).toBe("confirmed");
+      if (!r.ok) return;
+      const [row] = await db.select().from(schema.appointments).where(eq(schema.appointments.id, r.data.appointmentId));
+      expect(row?.source).toBe("manual");
+      expect(row?.expiresAt).toBeNull();
+      const events = await db.select().from(schema.appointmentEvents).where(eq(schema.appointmentEvents.appointmentId, r.data.appointmentId));
+      expect(events.map((e) => [e.type, e.actor])).toEqual([["created", "owner"]]);
+    });
+
+    it("ignores the lead time and the per-phone cap, and can use services hidden from the public", async () => {
+      expect((await manual(TEN, { now: new Date("2026-12-02T15:50:00Z") })).ok).toBe(true); // 10 minutes ahead
+      for (const t of ["17:00", "18:00", "19:00"]) expect((await manual(at(t), { n: 1 })).ok).toBe(true); // 4 for one phone
+      await db.update(schema.services).set({ isBookableOnline: false }).where(eq(schema.services.id, serviceId));
+      expect((await manual(at("20:00"), { n: 2 })).ok).toBe(true);
+    });
+
+    it("refuses inactive, foreign and malformed services", async () => {
+      expect(await manual(TEN, { serviceId: otherServiceId })).toEqual({ ok: false, error: "not_found" });
+      expect(await manual(TEN, { serviceId: "nope" })).toEqual({ ok: false, error: "not_found" });
+      await db.update(schema.services).set({ isActive: false }).where(eq(schema.services.id, serviceId));
+      expect(await manual(TEN)).toEqual({ ok: false, error: "not_found" });
+    });
+
+    it("engine mode only offers real slots; off-hours mode lets the owner pick any free time", async () => {
+      expect(await manual(at("03:00"))).toEqual({ ok: false, error: "slot_taken" }); // 21:00 local, closed
+      expect(await manual(at("16:07"))).toEqual({ ok: false, error: "slot_taken" }); // off the grid
+      expect((await manual(at("03:00"), { offHours: true })).ok).toBe(true);
+      expect((await manual(at("16:07"), { offHours: true, n: 2 })).ok).toBe(true);
+    });
+
+    it("never double-books, in either mode", async () => {
+      expect((await manual(TEN)).ok).toBe(true);
+      expect(await manual(TEN, { n: 2 })).toEqual({ ok: false, error: "slot_taken" });
+      expect(await manual(at("16:30"), { offHours: true, n: 2 })).toEqual({ ok: false, error: "slot_taken" }); // overlaps 16:00–17:00 with buffer
+      expect((await book(TEN, 3)).ok).toBe(false); // the public flow sees the manual appointment too
+    });
+
+    it("off-hours refuses the past (before today) and far-future dates", async () => {
+      expect(await manual(new Date("2026-11-30T16:00:00Z"), { offHours: true })).toEqual({ ok: false, error: "slot_taken" });
+      expect(await manual(new Date("2028-01-01T16:00:00Z"), { offHours: true })).toEqual({ ok: false, error: "slot_taken" });
+      expect((await manual(new Date("2026-12-01T13:00:00Z"), { offHours: true })).ok).toBe(true); // earlier today is fine
+    });
+
+    it("concurrent manual and public bookings of one slot: exactly one wins", async () => {
+      const conns = Array.from({ length: 6 }, () => postgres(url ?? "", { max: 2, onnotice: () => {} }));
+      try {
+        const results = await Promise.all(
+          conns.map((c, i) => {
+            const d = drizzle(c, { schema }) as unknown as Db;
+            return i % 2 === 0
+              ? createManualAppointment(d, business, { serviceId, start: TEN, client: person(i), now: NOW, offHours: false })
+              : createPublicBooking(d, business, { serviceId, start: TEN, client: person(i), now: NOW });
+          }),
+        );
+        expect(results.filter((r) => r.ok)).toHaveLength(1);
+      } finally {
+        await Promise.all(conns.map((c) => c.end()));
+      }
+    });
   });
 
   describe("cancelByClient", () => {

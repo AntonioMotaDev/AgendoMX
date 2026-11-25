@@ -1,39 +1,14 @@
-import Link from "next/link";
+import { AgendaTabs } from "@/components/dashboard/agenda-tabs";
 import { AppointmentCard } from "@/components/dashboard/appointment-card";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { displayLocalDate } from "@/lib/dates";
 import { getCurrentBusiness } from "@/lib/session";
 import { addDays, localDayBounds, toLocalDate } from "@/lib/time";
-import { cn } from "@/lib/utils";
 import { listAgenda, listPendingRequests } from "@/server/queries/appointments";
 import { buildAgendaCard } from "@/server/services/agenda-view";
 
 const t = copy.panel.agenda;
-
-function Tabs({ current }: { current: "today" | "tomorrow" }) {
-  const items = [
-    { key: "today" as const, href: "/app", label: t.tabs.today },
-    { key: "tomorrow" as const, href: "/app/manana", label: t.tabs.tomorrow },
-  ];
-  return (
-    <nav aria-label={t.tabsLabel} className="flex gap-1 rounded-lg bg-ink/5 p-1">
-      {items.map((i) => (
-        <Link
-          key={i.key}
-          href={i.href}
-          aria-current={i.key === current ? "page" : undefined}
-          className={cn(
-            "flex min-h-11 flex-1 items-center justify-center rounded-md text-base font-semibold",
-            i.key === current ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
-          )}
-        >
-          {i.label}
-        </Link>
-      ))}
-    </nav>
-  );
-}
 
 /** The owner's agenda for today or tomorrow. Today also leads with requests waiting for an answer. */
 export async function AgendaScreen({ day }: { day: "today" | "tomorrow" }) {
@@ -56,7 +31,7 @@ export async function AgendaScreen({ day }: { day: "today" | "tomorrow" }) {
 
   return (
     <section className="flex flex-col gap-5">
-      <Tabs current={day} />
+      <AgendaTabs current={day} />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{day === "today" ? t.todayTitle : t.tomorrowTitle}</h1>
         <p className="mt-1 text-base text-ink-muted">{displayLocalDate(date, true)}</p>
