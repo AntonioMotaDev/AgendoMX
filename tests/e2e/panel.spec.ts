@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { appointmentsOf, eventsOf, resetBookings, seedAppointment } from "./support/db";
 import { OWNER_A, OWNER_B, PASSWORD } from "./support/fixtures";
-import { hydrated, noHorizontalScroll, signIn } from "./support/helpers";
+import { chooseDay, hydrated, noHorizontalScroll, signIn } from "./support/helpers";
 
 test.beforeEach(async () => {
   await resetBookings();
@@ -120,7 +120,7 @@ test.describe("owner panel", () => {
     const customer = await (await browser.newContext({ viewport: { width: 375, height: 812 }, locale: "es-MX", timezoneId: "America/Mexico_City" })).newPage();
     await customer.goto(`/${OWNER_A.slug}`);
     await customer.locator('a[href*="/reservar?servicio="]', { hasText: "Corte de cabello" }).click();
-    await customer.getByRole("radio", { name: dayLabel }).click();
+    await chooseDay(customer, dayLabel);
     const offered = await customer.getByRole("radiogroup", { name: "Hora" }).getByRole("radio").allInnerTexts();
     expect(offered.length).toBeGreaterThan(5);
     expect(offered).not.toContain(slot);
@@ -181,5 +181,31 @@ test.describe("owner panel", () => {
     await page.getByRole("button", { name: "Agendar cita" }).click();
     await expect(page.getByText("Ese horario acaba de ocuparse, elige otro.")).toBeVisible();
     expect(await appointmentsOf(OWNER_A.slug)).toHaveLength(1);
+  });
+  test("the owner picks a theme and the public profile, the booking page and the appointment page use it", async ({ page, browser }) => {
+    await signIn(page);
+    await page.goto("/app/perfil/apariencia");
+    await hydrated(page, 'button[role="radio"]');
+    await expect(page.getByRole("radio", { name: /^Studio/ })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("radio", { name: /^Noir/ }).click();
+    await expect(page.getByText("Tema guardado")).toBeVisible();
+    await noHorizontalScroll(page);
+
+    const visitor = await (await browser.newContext({ viewport: { width: 375, height: 812 }, locale: "es-MX", timezoneId: "America/Mexico_City" })).newPage();
+    try {
+      await visitor.goto(`/${OWNER_A.slug}`);
+      await expect(visitor.locator('[data-theme-biz="noir"]')).toHaveCount(1);
+      await visitor.goto(`/${OWNER_A.slug}/reservar`);
+      await expect(visitor.locator('[data-theme-biz="noir"]')).toHaveCount(1);
+      const appt = await seedAppointment({ slug: OWNER_A.slug, status: "confirmed", startsInHours: 30 });
+      await visitor.goto(`/cita/${appt.token}`);
+      await expect(visitor.locator('[data-theme-biz="noir"]')).toHaveCount(1);
+    } finally {
+      await visitor.context().close();
+      // Leave the shared business as it was for the other tests.
+      await page.getByRole("radio", { name: /^Studio/ }).click();
+      await expect(page.getByRole("radio", { name: /^Studio/ })).toHaveAttribute("aria-checked", "true");
+      await expect(page.getByText("Tema guardado")).toBeVisible();
+    }
   });
 });

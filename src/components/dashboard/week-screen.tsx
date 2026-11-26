@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { AgendaTabs } from "@/components/dashboard/agenda-tabs";
-import { AppointmentCard } from "@/components/dashboard/appointment-card";
+import { AgendaTimeline } from "@/components/dashboard/agenda-timeline";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { displayLocalDate } from "@/lib/dates";
@@ -9,11 +9,12 @@ import { getCurrentBusiness } from "@/lib/session";
 import { addDays, localDayBounds, toLocalDate, weekStart, type LocalDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { listAgenda } from "@/server/queries/appointments";
-import { buildAgendaCard, type AgendaCardData } from "@/server/services/agenda-view";
+import { buildAgendaCard, gapMinutes } from "@/server/services/agenda-view";
+import type { AgendaItem } from "@/server/queries/appointments";
 
 const t = copy.panel.agenda;
 
-const arrow = "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-line bg-surface text-ink hover:bg-paper";
+const arrow = "inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-line bg-surface text-ink hover:bg-paper";
 
 /** Monday to Sunday of the week that contains `focus`, with every appointment grouped by local day. */
 export async function WeekScreen({ focus }: { focus: LocalDate | null }) {
@@ -27,8 +28,8 @@ export async function WeekScreen({ focus }: { focus: LocalDate | null }) {
 
   const items = await listAgenda(await getDb(), business.id, from, to);
   const ctx = { business: { name: business.name, category: business.category, timezone: business.timezone }, now };
-  const byDay = new Map<LocalDate, AgendaCardData[]>(days.map((d) => [d, []]));
-  for (const item of items) byDay.get(toLocalDate(item.startsAt, business.timezone))?.push(buildAgendaCard(item, "week", ctx));
+  const byDay = new Map<LocalDate, AgendaItem[]>(days.map((d) => [d, []]));
+  for (const item of items) byDay.get(toLocalDate(item.startsAt, business.timezone))?.push(item);
 
   const isThisWeek = monday === weekStart(today);
   const range = `${displayLocalDate(monday)} – ${displayLocalDate(days[6]!)}`;
@@ -38,10 +39,10 @@ export async function WeekScreen({ focus }: { focus: LocalDate | null }) {
       <AgendaTabs current="week" />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t.weekTitle}</h1>
+          <h1 className="text-[22px] font-extrabold leading-tight tracking-tight lg:text-[26px]">{t.weekTitle}</h1>
           <p className="mt-1 text-base text-ink-muted">{range}</p>
         </div>
-        <Link href="/app/citas/nueva" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md bg-ink px-4 text-sm font-semibold text-surface hover:bg-ink/90">
+        <Link href="/app/citas/nueva" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-semibold text-surface hover:bg-ink/90">
           <Plus aria-hidden="true" className="h-4 w-4" />
           {t.newAppointment}
         </Link>
@@ -63,22 +64,22 @@ export async function WeekScreen({ focus }: { focus: LocalDate | null }) {
         </Link>
       </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex max-w-3xl flex-col gap-6">
         {days.map((d) => {
-          const cards = byDay.get(d) ?? [];
+          const dayItems = byDay.get(d) ?? [];
+          const rows = dayItems.map((item, i) => ({
+            card: buildAgendaCard(item, "week", ctx),
+            gapBefore: i > 0 ? gapMinutes(dayItems[i - 1]!, item) : null,
+            isNext: false,
+            until: null,
+          }));
           return (
-            <section key={d} aria-labelledby={`day-${d}`} className="flex flex-col gap-3">
-              <h2 id={`day-${d}`} className={cn("flex items-baseline justify-between text-base font-semibold", d === today ? "text-brand-ink" : "text-ink")}>
+            <section key={d} aria-labelledby={`day-${d}`} className="flex min-w-0 flex-col gap-2">
+              <h2 id={`day-${d}`} className={cn("flex items-baseline justify-between text-base font-bold", d === today ? "text-brand-ink" : "text-ink")}>
                 <span>{displayLocalDate(d, true)}</span>
-                <span className="text-sm font-normal text-ink-muted">{cards.length > 0 ? t.count(cards.length) : t.noAppointments}</span>
+                <span className="text-sm font-normal text-ink-muted">{rows.length > 0 ? t.count(rows.length) : t.noAppointments}</span>
               </h2>
-              {cards.length > 0 ? (
-                <ul className="flex flex-col gap-3">
-                  {cards.map((c) => (
-                    <AppointmentCard key={c.id} card={c} showDate={false} />
-                  ))}
-                </ul>
-              ) : null}
+              {rows.length > 0 ? <AgendaTimeline rows={rows} /> : null}
             </section>
           );
         })}
