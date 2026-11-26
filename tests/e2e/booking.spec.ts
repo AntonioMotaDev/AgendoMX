@@ -104,6 +104,16 @@ test.describe("public booking", () => {
     await second.context().close();
   });
 
+  test("opening the details step does not submit the form: no errors, no booking", async ({ page }) => {
+    await startBooking(page);
+    await pickSlot(page);
+    await expect(page.getByLabel("Tu nombre")).toBeVisible();
+    // A submit would answer with "Escribe tu nombre." after a round trip to the server: give it time to show up.
+    await page.waitForTimeout(800);
+    await expect(page.getByText("Escribe tu nombre.")).toHaveCount(0);
+    expect(await appointmentsOf(OWNER_A.slug)).toHaveLength(0);
+  });
+
   test("an invalid phone is rejected and nothing is created", async ({ page }) => {
     await startBooking(page);
     await pickSlot(page);

@@ -17,6 +17,9 @@ export const businessCategory = pgEnum("business_category", [
 
 export const businessPlan = pgEnum("business_plan", ["free", "pro"]);
 
+/** Visual theme of the public profile and booking flow. Keep in sync with `THEME_IDS` in src/lib/themes.ts. */
+export const businessTheme = pgEnum("business_theme", ["studio", "noir", "bloom", "earth", "coast", "signal"]);
+
 export const availabilityExceptionType = pgEnum("availability_exception_type", [
   "closed",
   "custom_hours",

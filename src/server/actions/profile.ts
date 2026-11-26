@@ -3,9 +3,9 @@
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
-import { bookingSettingsSchema, profileInfoSchema, slugChangeSchema, socialLinksSchema } from "@/lib/validators/profile";
+import { bookingSettingsSchema, profileInfoSchema, slugChangeSchema, socialLinksSchema, themeSchema } from "@/lib/validators/profile";
 import { firstIssue, guarded } from "./helpers";
-import { changeSlug, updateBookingSettings, updateProfileInfo, updateSocialLinks } from "./profile-writes";
+import { changeSlug, updateBookingSettings, updateProfileInfo, updateSocialLinks, updateTheme } from "./profile-writes";
 import { fail, ok, type ActionResult } from "./result";
 
 async function currentBusiness() {
@@ -58,6 +58,18 @@ export async function saveBookingSettingsAction(input: unknown): Promise<ActionR
 
   return guarded("saveBookingSettings", async () => {
     await updateBookingSettings(await getDb(), business.id, parsed.data);
+    return ok(undefined);
+  });
+}
+
+export async function saveThemeAction(input: unknown): Promise<ActionResult> {
+  const business = await currentBusiness();
+  if (!business) return fail(copy.onboarding.guard.incomplete);
+  const parsed = themeSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+
+  return guarded("saveTheme", async () => {
+    await updateTheme(await getDb(), business.id, parsed.data);
     return ok(undefined);
   });
 }

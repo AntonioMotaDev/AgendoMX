@@ -2,14 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/public/notice";
+import { tButton } from "@/components/public/styles";
 import { copy } from "@/lib/copy";
 import { cancelBookingAction } from "@/server/actions/booking";
 
 const t = copy.public.appointment;
 
-/** Two-step cancel (ask, then confirm) so a stray tap never cancels. */
+/** Two-step cancel (ask, then confirm) so a stray tap never cancels. Rendered inside a ThemeScope. */
 export function CancelPanel({ token, deadlineLabel }: { token: string; deadlineLabel: string }) {
   const router = useRouter();
   const [asking, setAsking] = useState(false);
@@ -32,24 +32,24 @@ export function CancelPanel({ token, deadlineLabel }: { token: string; deadlineL
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-ink-muted">{t.canCancelUntil(deadlineLabel)}</p>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      <p className="text-sm text-th-muted">{t.canCancelUntil(deadlineLabel)}</p>
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {asking ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-danger/40 bg-danger/5 p-4">
-          <p className="text-base font-semibold text-ink">{t.confirmCancel}</p>
+        <div className="flex flex-col gap-3 rounded-[18px] border border-th-danger/50 bg-th-danger/10 p-4">
+          <p className="text-base font-bold text-th-text">{t.confirmCancel}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="secondary" disabled={busy} onClick={() => setAsking(false)}>
+            <button type="button" className={tButton.secondary} disabled={busy} onClick={() => setAsking(false)}>
               {t.keep}
-            </Button>
-            <Button disabled={busy} onClick={cancel} className="bg-danger text-surface hover:bg-danger/90">
+            </button>
+            <button type="button" className={tButton.danger} disabled={busy} onClick={cancel}>
               {busy ? t.cancelling : t.cancel}
-            </Button>
+            </button>
           </div>
         </div>
       ) : (
-        <Button variant="secondary" onClick={() => setAsking(true)}>
+        <button type="button" className={tButton.secondary} onClick={() => setAsking(true)}>
           {t.cancel}
-        </Button>
+        </button>
       )}
     </div>
   );

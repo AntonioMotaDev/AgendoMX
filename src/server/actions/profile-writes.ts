@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Db } from "@/db";
 import { isUniqueViolation } from "@/db/errors";
 import { businesses } from "@/db/schema";
-import type { BookingSettingsData, ProfileInfoData, SocialLinksData } from "@/lib/validators/profile";
+import type { BookingSettingsData, ProfileInfoData, SocialLinksData, ThemeData } from "@/lib/validators/profile";
 import type { WriteResult } from "./business-writes";
 
 /** Every update is keyed by the session's businessId; no function here takes a business from request data. */
@@ -63,4 +63,8 @@ export async function updateBookingSettings(db: Db, businessId: string, data: Bo
       cancellationPolicyText: data.cancellationPolicyText,
     })
     .where(eq(businesses.id, businessId));
+}
+
+export async function updateTheme(db: Db, businessId: string, data: ThemeData): Promise<void> {
+  await db.update(businesses).set({ theme: data.theme }).where(eq(businesses.id, businessId));
 }

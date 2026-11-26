@@ -3,6 +3,7 @@ import { copy } from "@/lib/copy";
 import { normalizeMapsUrl } from "@/lib/maps";
 import { normalizeMxPhone } from "@/lib/phone";
 import { normalizeSocial, SOCIAL_PLATFORMS, type SocialPlatform } from "@/lib/social";
+import { THEME_IDS } from "@/lib/themes";
 import { businessIdentityFields, normalizeCategoryOther, requireCategoryOther, slugSchema } from "./onboarding";
 
 const p = copy.panel.profile;
@@ -105,3 +106,9 @@ export const bookingSettingsSchema = z.object({
 
 export type BookingSettingsInput = z.input<typeof bookingSettingsSchema>;
 export type BookingSettingsData = z.output<typeof bookingSettingsSchema>;
+
+export const themeSchema = z.object({
+  theme: z.enum(THEME_IDS, { error: p.appearance.invalid }),
+});
+
+export type ThemeData = z.output<typeof themeSchema>;

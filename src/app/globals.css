@@ -21,6 +21,42 @@
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-panel: 18px;
+
+  /* Business theme (Studio by default). See src/lib/themes.ts and docs/BRAND.md §6. */
+  --t-bg: #efece6;
+  --t-surface: #f8f6f2;
+  --t-text: #23221f;
+  --t-muted: #66635b;
+  --t-line: #ddd8cd;
+  --t-primary: #2b2a27;
+  --t-onp: #f8f6f2;
+  --t-accent: #9a8f78;
+  --t-soft: #e3ded2;
+  --t-cover: #e4dfd3;
+  --t-danger: #b3261e;
+}
+
+/* Only the public profile, the booking flow and the client's appointment page opt in to a theme. */
+[data-theme-biz="noir"] {
+  --t-bg: #151513; --t-surface: #1f1e1b; --t-text: #f1ebdd; --t-muted: #b3aa98; --t-line: #34322d;
+  --t-primary: #c9a26a; --t-onp: #17140f; --t-accent: #c9a26a; --t-soft: #2a2825; --t-cover: #1f1e1b; --t-danger: #ff8f85;
+  color-scheme: dark;
+}
+[data-theme-biz="bloom"] {
+  --t-bg: #f8ebea; --t-surface: #fff8f6; --t-text: #3a2326; --t-muted: #7a5a5e; --t-line: #ebd3d2;
+  --t-primary: #a94868; --t-onp: #fff8f6; --t-accent: #d98ba0; --t-soft: #f3d9da; --t-cover: #f3d9da; --t-danger: #a8261e;
+}
+[data-theme-biz="earth"] {
+  --t-bg: #eceadd; --t-surface: #f6f5ec; --t-text: #26301f; --t-muted: #5f6652; --t-line: #d7d5c2;
+  --t-primary: #4d5f3b; --t-onp: #f6f5ec; --t-accent: #a68f63; --t-soft: #dedfc8; --t-cover: #dedfc8; --t-danger: #a8261e;
+}
+[data-theme-biz="coast"] {
+  --t-bg: #e7eef0; --t-surface: #f5f9fa; --t-text: #14282f; --t-muted: #4f6870; --t-line: #cbdadf;
+  --t-primary: #1f5f6e; --t-onp: #f5f9fa; --t-accent: #6fa3b0; --t-soft: #d4e4e8; --t-cover: #d4e4e8; --t-danger: #a8261e;
+}
+[data-theme-biz="signal"] {
+  --t-bg: #fbf3e6; --t-surface: #fffcf6; --t-text: #14213d; --t-muted: #5a6177; --t-line: #ebdfc9;
+  --t-primary: #14213d; --t-onp: #fffcf6; --t-accent: #f26b5b; --t-soft: #fce3a6; --t-cover: #fce3a6; --t-danger: #b3261e;
 }
 
 @theme inline {
@@ -34,6 +70,17 @@
   --color-brand-ink: var(--brand-ink);
   --color-danger: var(--danger);
   --color-success: var(--success);
+  --color-th-bg: var(--t-bg);
+  --color-th-surface: var(--t-surface);
+  --color-th-text: var(--t-text);
+  --color-th-muted: var(--t-muted);
+  --color-th-line: var(--t-line);
+  --color-th-primary: var(--t-primary);
+  --color-th-onp: var(--t-onp);
+  --color-th-accent: var(--t-accent);
+  --color-th-soft: var(--t-soft);
+  --color-th-cover: var(--t-cover);
+  --color-th-danger: var(--t-danger);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -50,4 +97,9 @@ body {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+
+/* The global focus ring is charcoal; themed pages use their own text color so Noir (dark) keeps a visible ring. */
+[data-theme-biz] :focus-visible {
+  outline-color: var(--t-text);
 }

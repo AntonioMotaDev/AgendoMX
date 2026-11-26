@@ -57,6 +57,13 @@
       "when": 1795634409208,
       "tag": "0007_terms_and_anonymized_clients",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795727918250,
+      "tag": "0008_business_theme",
+      "breakpoints": true
     }
   ]
 }

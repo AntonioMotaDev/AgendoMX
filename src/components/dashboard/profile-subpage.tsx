@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import { copy } from "@/lib/copy";
 
 /** Shared frame for the screens under Perfil: back link, title and a phone-width column. */
-export function ProfileSubpage({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function ProfileSubpage({ title, subtitle, children, wide = false }: { title: string; subtitle?: string; children: ReactNode; wide?: boolean }) {
   return (
-    <section className="mx-auto flex w-full max-w-md flex-col gap-5">
+    <section className={`mx-auto flex w-full flex-col gap-5 ${wide ? "max-w-3xl" : "max-w-md"}`}>
       <Link href="/app/perfil" className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-ink">
         <ArrowLeft aria-hidden="true" className="h-4 w-4" />
         {copy.panel.profile.back}
