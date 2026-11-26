@@ -64,7 +64,7 @@ test.describe("legal pages and acceptance", () => {
     await pickSlot(page);
     const notice = page.getByText(`${OWNER_A.business}, con domicilio en Juárez 123, Guadalajara, Jalisco, es el responsable de tus datos`, { exact: false });
     await expect(notice).toBeVisible();
-    await expect(notice).toContainText("usará tu nombre, celular y correo");
+    await expect(notice).toContainText("Usará tu nombre, tu celular y tu correo");
     await expect(notice).toContainText("AgendoMX");
     await noHorizontalScroll(page);
     await page.getByRole("link", { name: "Aviso de privacidad completo" }).click();
@@ -92,6 +92,7 @@ test.afterEach(async () => {
 
 test.describe("booking requirements while the legal texts are published", () => {
   test("a health business asks for the express authorization; the booking stores the evidence", async ({ page }) => {
+    test.skip(process.env.E2E_HEALTH === "false", "health businesses are not admitted in this configuration");
     const id = stamp();
     const spec = { email: `salud-${id}@e2e.test`, name: "Dra. Salud", business: `Consultorio ${id}`, slug: `consultorio-${id}`, mode: "auto" as const, category: "psychology", services: [{ name: "Sesión", minutes: 50, priceCents: 90000, buffer: 0 }] };
     await seedTemp(spec);
@@ -222,5 +223,46 @@ test.describe("an owner who never finished onboarding", () => {
     await page.waitForURL(/\/login/);
     const left = await withDb((sql) => sql<{ n: number }[]>`select count(*)::int as n from "user" where email = ${email}`);
     expect(left[0]!.n).toBe(0);
+  });
+});
+
+test.describe("health businesses are not admitted yet (launch configuration)", () => {
+  test.skip(process.env.E2E_HEALTH !== "false", "needs E2E_HEALTH=false");
+
+  test("an existing health business stays visible but takes no online bookings, and the owner is told", async ({ page }) => {
+    const id = stamp();
+    const spec = { email: `salud-cerrada-${id}@e2e.test`, name: "Dra. Cerrada", business: `Consultorio ${id}`, slug: `consultorio-cerrado-${id}`, mode: "auto" as const, category: "psychology", services: [{ name: "Sesión", minutes: 50, priceCents: 90000, buffer: 0 }] };
+    await seedTemp(spec);
+
+    await page.goto(`/${spec.slug}`);
+    await expect(page.getByText(spec.business).first()).toBeVisible();
+    await expect(page.getByText("todavía no recibe reservas en línea")).toBeVisible();
+    await expect(page.locator(`a[href*="/${spec.slug}/reservar"]`)).toHaveCount(0);
+    await page.goto(`/${spec.slug}/reservar`);
+    await expect(page).toHaveURL(new RegExp(`/${spec.slug}$`));
+
+    await signIn(page, spec);
+    await page.goto("/app");
+    await expect(page.getByText("Las reservas en línea para negocios de salud aún no están disponibles")).toBeVisible();
+  });
+
+  test("the category lists offer no health option, but a business keeps the one it already has", async ({ page }) => {
+    const id = stamp();
+    const general = { email: `general-${id}@e2e.test`, name: "Dueño General", business: `General ${id}`, slug: `general-${id}`, mode: "auto" as const, services: [{ name: "Corte", minutes: 30, priceCents: 10000, buffer: 0 }] };
+    await seedTemp(general);
+    await signIn(page, general);
+    await page.goto("/app/perfil/informacion");
+    const select = page.getByLabel(/A qué te dedicas|Tipo de negocio|Categoría/i).first();
+    const options = await select.locator("option").allInnerTexts();
+    expect(options.join("|")).not.toMatch(/Psicolog|Fisioterap|Nutri|Odonto|médic/i);
+    expect(options.join("|")).toMatch(/Barber/);
+
+    const health = { email: `salud-ed-${id}@e2e.test`, name: "Dra. Edita", business: `Consultorio Edita ${id}`, slug: `consultorio-edita-${id}`, mode: "auto" as const, category: "nutrition", services: [{ name: "Consulta", minutes: 50, priceCents: 90000, buffer: 0 }] };
+    await seedTemp(health);
+    await signIn(page, health);
+    await page.goto("/app/perfil/informacion");
+    const own = await page.getByLabel(/A qué te dedicas|Tipo de negocio|Categoría/i).first().locator("option").allInnerTexts();
+    expect(own.join("|")).toMatch(/Nutri/);
+    expect(own.join("|")).not.toMatch(/Psicolog|Fisioterap|Odonto/i);
   });
 });

@@ -4,7 +4,9 @@ import { ProfileSubpage } from "@/components/dashboard/profile-subpage";
 import { copy } from "@/lib/copy";
 import { MX_STATES } from "@/lib/mx-states";
 import { formatMxPhoneForInput } from "@/lib/phone";
+import { legalSwitches } from "@/lib/legal";
 import { getCurrentBusiness } from "@/lib/session";
+import { selectableCategories } from "@/server/services/booking";
 
 export const metadata: Metadata = { title: "Información y contacto — AgendoMX", robots: { index: false } };
 
@@ -13,6 +15,7 @@ export default async function ProfileInfoPage() {
   return (
     <ProfileSubpage title={copy.panel.profile.info.title}>
       <ProfileInfoForm
+        categories={selectableCategories(legalSwitches(), business.category)}
         initial={{
           name: business.name,
           category: business.category,

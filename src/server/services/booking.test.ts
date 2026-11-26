@@ -8,6 +8,7 @@ import {
   isSensitiveCategory,
   parseRequestedStart,
   publicBookingRequirements,
+  selectableCategories,
 } from "./booking";
 import { generatePublicToken } from "@/lib/tokens";
 
@@ -96,28 +97,61 @@ describe("parseRequestedStart", () => {
 
 describe("publicBookingRequirements", () => {
   const complete = { category: "barbershop" as const, address: "Juárez 123", city: "Puebla", state: "Puebla", phone: null, whatsapp: "+525512345678" };
+  const off = { published: false, healthEnabled: false };
+  const live = { published: true, healthEnabled: false };
+  const liveWithHealth = { published: true, healthEnabled: true };
+  const HEALTH = ["physiotherapy", "psychology", "nutrition", "dentistry", "medical"] as const;
 
   it("asks nothing while the legal texts are not published, whatever the business looks like", () => {
     const bare = { category: "psychology" as const, address: null, city: null, state: null, phone: null, whatsapp: null };
-    expect(publicBookingRequirements(false, bare)).toEqual({ closed: false, missing: [], needsHealthConsent: false });
+    expect(publicBookingRequirements(off, bare)).toEqual({ closed: false, missing: [], healthUnavailable: false, needsHealthConsent: false });
+    expect(publicBookingRequirements({ published: false, healthEnabled: true }, bare).closed).toBe(false);
   });
 
   it("a complete general business is open and needs no authorization box", () => {
-    expect(publicBookingRequirements(true, complete)).toEqual({ closed: false, missing: [], needsHealthConsent: false });
+    expect(publicBookingRequirements(live, complete)).toEqual({ closed: false, missing: [], healthUnavailable: false, needsHealthConsent: false });
   });
 
-  it("each health category needs the authorization box", () => {
-    for (const category of ["physiotherapy", "psychology", "nutrition", "dentistry", "medical"] as const) {
-      expect(publicBookingRequirements(true, { ...complete, category }).needsHealthConsent, category).toBe(true);
+  it("health categories are closed to online bookings until they are admitted", () => {
+    for (const category of HEALTH) {
+      expect(publicBookingRequirements(live, { ...complete, category }), category).toEqual({ closed: true, missing: [], healthUnavailable: true, needsHealthConsent: false });
     }
+  });
+
+  it("once admitted, each health category needs the authorization box and the rest do not", () => {
+    for (const category of HEALTH) expect(publicBookingRequirements(liveWithHealth, { ...complete, category }), category).toMatchObject({ closed: false, needsHealthConsent: true });
     for (const category of ["barbershop", "beauty_salon", "nails", "spa", "fitness", "tattoo", "other"] as const) {
-      expect(publicBookingRequirements(true, { ...complete, category }).needsHealthConsent, category).toBe(false);
+      expect(publicBookingRequirements(liveWithHealth, { ...complete, category }).needsHealthConsent, category).toBe(false);
     }
   });
 
   it("a business without address or contact is closed to online bookings and says what is missing", () => {
-    expect(publicBookingRequirements(true, { ...complete, address: null })).toMatchObject({ closed: true, missing: ["address"] });
-    expect(publicBookingRequirements(true, { ...complete, whatsapp: null })).toMatchObject({ closed: true, missing: ["contact"] });
+    expect(publicBookingRequirements(live, { ...complete, address: null })).toMatchObject({ closed: true, missing: ["address"] });
+    expect(publicBookingRequirements(live, { ...complete, whatsapp: null })).toMatchObject({ closed: true, missing: ["contact"] });
+  });
+});
+
+describe("selectableCategories", () => {
+  const HEALTH = ["physiotherapy", "psychology", "nutrition", "dentistry", "medical"];
+
+  it("offers everything while the legal texts are not published", () => {
+    expect(selectableCategories({ published: false, healthEnabled: false })).toHaveLength(12);
+  });
+
+  it("hides the five health categories once published, and keeps the other seven", () => {
+    const list = selectableCategories({ published: true, healthEnabled: false });
+    expect(list).toHaveLength(7);
+    for (const c of HEALTH) expect(list).not.toContain(c);
+    expect(list).toContain("other");
+  });
+
+  it("keeps the business's own health category so editing its profile does not break it", () => {
+    expect(selectableCategories({ published: true, healthEnabled: false }, "psychology")).toContain("psychology");
+    expect(selectableCategories({ published: true, healthEnabled: false }, "psychology")).not.toContain("nutrition");
+  });
+
+  it("offers everything again when health is admitted", () => {
+    expect(selectableCategories({ published: true, healthEnabled: true })).toHaveLength(12);
   });
 });
 

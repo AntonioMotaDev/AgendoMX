@@ -318,6 +318,15 @@ export function BookingWizard({ slug, businessName, services, preselectedService
               {displayLocalDate(date, true)}, {selectedSlot.label}
             </p>
           </div>
+          {/* The notice is shown before any data is asked for, not tucked under the button. */}
+          {privacyNotice ? (
+            <section aria-label={t.privacyTitle} className="rounded-lg border border-line bg-surface p-3.5 text-sm leading-relaxed text-ink">
+              <h2 className="mb-1 font-semibold">{t.privacyTitle}</h2>
+              <p>
+                <InlineMarkdown text={privacyNotice} />
+              </p>
+            </section>
+          ) : null}
           {manualConfirmation ? <Alert tone="info">{t.manualNotice}</Alert> : null}
           {formError ? <Alert tone="error">{formError}</Alert> : null}
           <Field
@@ -382,11 +391,6 @@ export function BookingWizard({ slug, businessName, services, preselectedService
               error={fieldErrors.healthConsent}
               label={<InlineMarkdown text={healthConsentNotice} />}
             />
-          ) : null}
-          {privacyNotice ? (
-            <p className="text-xs leading-relaxed text-ink-muted">
-              <InlineMarkdown text={privacyNotice} />
-            </p>
           ) : null}
           <Button type="submit" disabled={!canSubmit}>
             {submitting ? t.confirming : t.confirm}

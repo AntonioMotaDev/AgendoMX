@@ -51,6 +51,9 @@ export default defineConfig({
       RESEND_API_KEY: "",
       // The legal pages, registration checkbox and booking notice are dark by default: E2E exercises them.
       LEGAL_PUBLISHED: "true",
+      // Health businesses are admitted by default here to exercise the consent flow. `E2E_HEALTH=false` runs the launch
+      // configuration (health categories not offered): `E2E_HEALTH=false pnpm test:e2e tests/e2e/legal.spec.ts`.
+      HEALTH_CATEGORIES_ENABLED: process.env.E2E_HEALTH === "false" ? "false" : "true",
     },
   },
 });

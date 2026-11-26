@@ -2,9 +2,11 @@
 
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
+import { legalSwitches } from "@/lib/legal";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
 import { bookingSettingsSchema, profileInfoSchema, slugChangeSchema, socialLinksSchema } from "@/lib/validators/profile";
 import { firstIssue, guarded } from "./helpers";
+import { selectableCategories } from "@/server/services/booking";
 import { changeSlug, updateBookingSettings, updateProfileInfo, updateSocialLinks } from "./profile-writes";
 import { fail, ok, type ActionResult } from "./result";
 
@@ -20,6 +22,7 @@ export async function saveProfileInfoAction(input: unknown): Promise<ActionResul
   if (!parsed.success) return firstIssue(parsed.error);
 
   return guarded("saveProfileInfo", async () => {
+    if (!selectableCategories(legalSwitches(), business.category).includes(parsed.data.category)) return fail(copy.onboarding.validation.categoryUnavailable, "category");
     await updateProfileInfo(await getDb(), business.id, parsed.data);
     return ok(undefined);
   });

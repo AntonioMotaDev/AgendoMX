@@ -117,7 +117,17 @@ describe("publication guard", () => {
   it("production never publishes legal texts that still contain draft markers", () => {
     const published = wrangler.vars?.LEGAL_PUBLISHED === "true";
     if (!published) return; // dark in production: nothing to check yet
-    for (const [name, text] of Object.entries(LEGAL_TEXTS)) expect(DRAFT_MARKER.test(text), `${name} still has draft markers`).toBe(false);
+    const healthOn = wrangler.vars?.HEALTH_CATEGORIES_ENABLED === "true";
+    for (const [name, text] of Object.entries(LEGAL_TEXTS)) {
+      // The health consent text is only live when health businesses are admitted; until then it may stay a draft.
+      if (name === "privacyClientsHealthConsent" && !healthOn) continue;
+      expect(DRAFT_MARKER.test(text), `${name} still has draft markers`).toBe(false);
+    }
+  });
+
+  it("health businesses are not admitted in production while their consent text is a draft", () => {
+    if (wrangler.vars?.HEALTH_CATEGORIES_ENABLED !== "true") return;
+    expect(DRAFT_MARKER.test(LEGAL_TEXTS.privacyClientsHealthConsent), "health consent text still has draft markers").toBe(false);
   });
 
   it("the draft texts do contain markers today (so the guard above has teeth)", () => {

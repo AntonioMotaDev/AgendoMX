@@ -120,6 +120,7 @@ export const onboardingCopy = {
     nameRequired: "Escribe el nombre de tu negocio.",
     nameLong: "Usa máximo 80 caracteres.",
     categoryRequired: "Elige a qué te dedicas.",
+    categoryUnavailable: "Por ahora AgendoMX no está disponible para negocios de salud. Elige otra opción.",
     categoryOtherRequired: "Cuéntanos a qué te dedicas, en 2 a 60 caracteres.",
     stateRequired: "Elige tu estado.",
     cityRequired: "Escribe tu ciudad o municipio.",

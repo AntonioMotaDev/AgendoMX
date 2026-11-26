@@ -47,7 +47,7 @@ export function build() {
       .trim();
   const short = quoted(shortBlock);
   // The checkbox text shown only for health categories (blockquote under "## A2.").
-  const healthConsent = quoted(section(clients, "A2. Casilla de autorización (solo negocios de salud: psicología, fisioterapia, nutrición, odontología y consulta médica)"));
+  const healthConsent = quoted(section(clients, "A2. Casilla de autorización (solo negocios de salud: psicología, fisioterapia, nutrición, odontología y consulta médica) — NO SE MUESTRA mientras `HEALTH_CATEGORIES_ENABLED` esté apagada"));
 
   const docs = {
     version,

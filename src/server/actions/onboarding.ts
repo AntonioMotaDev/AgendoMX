@@ -2,6 +2,7 @@
 
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
+import { legalSwitches } from "@/lib/legal";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
 import {
   businessStepSchema,
@@ -12,6 +13,7 @@ import {
   slugSchema,
 } from "@/lib/validators/onboarding";
 import { isSlugAvailable } from "@/server/queries/business";
+import { selectableCategories } from "@/server/services/booking";
 import { saveBusinessProfile, saveFirstService, saveWeeklySchedule } from "./business-writes";
 import { firstIssue, guarded } from "./helpers";
 import { fail, ok, type ActionResult } from "./result";
@@ -39,6 +41,9 @@ export async function saveBusinessStepAction(input: unknown): Promise<ActionResu
   if (!parsed.success) return firstIssue(parsed.error);
 
   return guarded("saveBusinessStep", async () => {
+    // Health categories are not admitted yet (while the legal texts are published): refuse them here, not only in the form.
+    const current = await getCurrentBusiness();
+    if (!selectableCategories(legalSwitches(), current?.category ?? null).includes(parsed.data.category)) return fail(c.validation.categoryUnavailable, "category");
     const result = await saveBusinessProfile(await getDb(), { id: owner.id, name: owner.name }, parsed.data);
     if (!result.ok) return fail(c.business.slugTaken, "slug");
     return ok({ slug: result.data.slug });

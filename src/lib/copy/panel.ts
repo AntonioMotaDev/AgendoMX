@@ -14,6 +14,11 @@ export const panelCopy = {
       refuseTitle: "¿No estás de acuerdo?",
       refuseBody: "Puedes cerrar sesión o eliminar tu cuenta y tus datos.",
     },
+    // Banner for health businesses while they are not admitted yet.
+    healthClosed: {
+      title: "Las reservas en línea para negocios de salud aún no están disponibles",
+      body: "Por ahora AgendoMX no recibe reservas en línea de psicología, fisioterapia, nutrición, odontología ni consulta médica. Tu perfil sigue visible, pero sin botón para agendar. Te avisaremos cuando estén disponibles.",
+    },
     // Banner of the panel when the business lacks the data its clients' privacy notice must show.
     missing: {
       title: "Completa tus datos para recibir reservas en línea",

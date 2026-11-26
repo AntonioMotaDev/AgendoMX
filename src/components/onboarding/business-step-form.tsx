@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { SelectField } from "@/components/ui/select";
-import { BUSINESS_CATEGORIES } from "@/lib/categories";
+import type { BusinessCategory } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { MX_STATES } from "@/lib/mx-states";
 import { slugify } from "@/lib/reserved-slugs";
@@ -23,7 +23,7 @@ import { SlugStatus, useSlugStatus } from "./slug-status";
 
 const c = copy.onboarding;
 
-export function BusinessStepForm({ initial, publicHost }: { initial: Partial<BusinessStepInput>; publicHost: string }) {
+export function BusinessStepForm({ initial, publicHost, categories }: { initial: Partial<BusinessStepInput>; publicHost: string; categories: readonly BusinessCategory[] }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   // Once the owner edits the link by hand (or already has one), stop deriving it from the name.
@@ -96,7 +96,7 @@ export function BusinessStepForm({ initial, publicHost }: { initial: Partial<Bus
         error={errors.category?.message}
         {...register("category")}
       >
-        {BUSINESS_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <option key={category} value={category}>
             {c.categories[category]}
           </option>

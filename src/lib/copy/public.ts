@@ -43,6 +43,7 @@ export const publicCopy = {
     email: "Correo (opcional)",
     emailHint: "Si lo dejas, te enviamos la confirmación y un recordatorio.",
     verifying: "Verificando que eres una persona…",
+    privacyTitle: "Aviso de privacidad",
     manualNotice: "Este negocio confirma cada cita. Recibirás respuesta pronto; mientras tanto tu horario queda apartado.",
     errors: {
       nameRequired: "Escribe tu nombre.",

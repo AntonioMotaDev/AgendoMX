@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { SelectField } from "@/components/ui/select";
 import { TextareaField } from "@/components/ui/textarea-field";
-import { BUSINESS_CATEGORIES } from "@/lib/categories";
+import type { BusinessCategory } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { MX_STATES } from "@/lib/mx-states";
 import { CATEGORY_OTHER_MAX } from "@/lib/validators/onboarding";
@@ -20,7 +20,7 @@ const t = copy.panel.profile.info;
 const b = copy.onboarding.business;
 const common = copy.panel.common;
 
-export function ProfileInfoForm({ initial }: { initial: Partial<ProfileInfoInput> }) {
+export function ProfileInfoForm({ initial, categories }: { initial: Partial<ProfileInfoInput>; categories: readonly BusinessCategory[] }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -57,7 +57,7 @@ export function ProfileInfoForm({ initial }: { initial: Partial<ProfileInfoInput
       <Field label={b.name} autoComplete="organization" error={errors.name?.message} {...register("name")} />
 
       <SelectField label={b.category} placeholder={b.categoryPlaceholder} defaultValue={initial.category ?? ""} error={errors.category?.message} {...register("category")}>
-        {BUSINESS_CATEGORIES.map((value) => (
+        {categories.map((value) => (
           <option key={value} value={value}>
             {copy.onboarding.categories[value]}
           </option>

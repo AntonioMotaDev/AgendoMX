@@ -9,3 +9,17 @@ import { optionalEnv } from "@/lib/env";
 export function legalPublished(): boolean {
   return optionalEnv("LEGAL_PUBLISHED") === "true";
 }
+
+/**
+ * Health categories (psychology, physiotherapy, nutrition, dentistry, medical) are not offered while the
+ * legal texts are published, until the express-consent mechanism for sensitive data is validated by a lawyer.
+ * A runtime var like LEGAL_PUBLISHED; staging and E2E can turn it on to exercise the consent flow.
+ */
+export function healthCategoriesEnabled(): boolean {
+  return optionalEnv("HEALTH_CATEGORIES_ENABLED") === "true";
+}
+
+/** Both switches, as the pure helpers in server/services/booking.ts take them. */
+export function legalSwitches(): { published: boolean; healthEnabled: boolean } {
+  return { published: legalPublished(), healthEnabled: healthCategoriesEnabled() };
+}

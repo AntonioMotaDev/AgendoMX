@@ -8,10 +8,12 @@ import { ScheduleStepForm } from "@/components/onboarding/schedule-step-form";
 import { ServiceStepForm } from "@/components/onboarding/service-step-form";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
+import { legalSwitches } from "@/lib/legal";
 import { centsToInput } from "@/lib/money";
 import { MX_STATES } from "@/lib/mx-states";
 import { getCurrentBusiness, requireOwner } from "@/lib/session";
 import { getFirstService, getOnboardingState, getPrimaryStaff, getScheduleRules } from "@/server/queries/business";
+import { selectableCategories } from "@/server/services/booking";
 import { applyPreset, rulesToSchedule, SCHEDULE_PRESETS } from "@/server/services/schedule";
 
 export const metadata: Metadata = { title: "Configura tu negocio — AgendoMX", robots: { index: false } };
@@ -39,6 +41,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/app/o
       <OnboardingShell step={1} title={c.business.title} subtitle={c.business.subtitle}>
         <BusinessStepForm
           publicHost={host}
+          categories={selectableCategories(legalSwitches(), business?.category ?? null)}
           initial={
             business
               ? { name: business.name, category: business.category, categoryOther: business.categoryOther ?? "", state: MX_STATES.find((s) => s === business.state), city: business.city ?? "", slug: business.slug }

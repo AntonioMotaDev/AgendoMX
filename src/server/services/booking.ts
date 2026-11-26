@@ -2,7 +2,7 @@
  * Booking rules that do not need the database. Pure functions, no I/O.
  * See CLAUDE.md §5 "Flujo de reserva pública".
  */
-import type { BusinessCategory } from "@/lib/categories";
+import { BUSINESS_CATEGORIES, type BusinessCategory } from "@/lib/categories";
 import { missingControllerData } from "@/lib/legal-content";
 
 /**
@@ -15,26 +15,46 @@ export function isSensitiveCategory(category: BusinessCategory): boolean {
   return SENSITIVE_CATEGORIES.has(category);
 }
 
+export interface LegalSwitches {
+  /** LEGAL_PUBLISHED: the legal texts are live. Until then nothing below changes anything. */
+  published: boolean;
+  /** HEALTH_CATEGORIES_ENABLED: health businesses are admitted once their consent flow is validated. */
+  healthEnabled: boolean;
+}
+
+/**
+ * Categories an owner may pick. While the legal texts are published and health is not enabled, health
+ * categories are hidden, except the one the business already has (editing its profile must not break it).
+ */
+export function selectableCategories(switches: LegalSwitches, current: BusinessCategory | null = null): BusinessCategory[] {
+  const hideHealth = switches.published && !switches.healthEnabled;
+  return BUSINESS_CATEGORIES.filter((c) => !hideHealth || !isSensitiveCategory(c) || c === current);
+}
+
 export interface PublicBookingRequirements {
-  /** The business cannot take online bookings: its client notice would not be able to name it as controller. */
+  /** The business cannot take online bookings (missing controller data, or a health category that is not admitted yet). */
   closed: boolean;
   /** What the owner still has to register (drives the panel banner). */
   missing: Array<"address" | "contact">;
-  /** The booking form must carry the express authorization box (health categories). */
+  /** The business is in a health category and health businesses are not admitted yet. */
+  healthUnavailable: boolean;
+  /** The booking form must carry the express authorization box (health categories, once admitted). */
   needsHealthConsent: boolean;
 }
 
 /**
- * What a public booking needs while the legal texts are published. When they are not (production today),
- * nothing changes: no requirement, no box. One place so the profile, the form and the server agree.
+ * What a public booking needs while the legal texts are published. When they are not (production before
+ * publication), nothing changes: no requirement, no box. One place so the profile, the form and the server agree.
  */
 export function publicBookingRequirements(
-  published: boolean,
+  switches: LegalSwitches,
   business: { category: BusinessCategory; address: string | null; city: string | null; state: string | null; phone: string | null; whatsapp: string | null },
 ): PublicBookingRequirements {
-  if (!published) return { closed: false, missing: [], needsHealthConsent: false };
+  if (!switches.published) return { closed: false, missing: [], healthUnavailable: false, needsHealthConsent: false };
   const missing = missingControllerData(business);
-  return { closed: missing.length > 0, missing, needsHealthConsent: isSensitiveCategory(business.category) };
+  const sensitive = isSensitiveCategory(business.category);
+  const healthUnavailable = sensitive && !switches.healthEnabled;
+  return { closed: missing.length > 0 || healthUnavailable, missing, healthUnavailable, needsHealthConsent: sensitive && switches.healthEnabled };
 }
 
 /** Upcoming pending/confirmed appointments one phone number may hold at a business. */

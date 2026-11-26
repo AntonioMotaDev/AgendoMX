@@ -6,7 +6,7 @@ import { hitRateLimit } from "@/db/rate-limit";
 import { sha256Hex } from "@/lib/auth-rate-limit";
 import { copy } from "@/lib/copy";
 import { formatInstantTime } from "@/lib/dates";
-import { legalPublished } from "@/lib/legal";
+import { legalPublished, legalSwitches } from "@/lib/legal";
 import { LEGAL_VERSION } from "@/lib/legal-content";
 import { inBackground } from "@/lib/email/send";
 import { sendClientBookingEmail, sendOwnerBookingEmail } from "@/lib/email/booking-emails";
@@ -131,7 +131,7 @@ export async function createBookingAction(raw: unknown): Promise<ActionResult<{ 
     // While the legal texts are published: the client notice must be able to name its controller, and
     // health categories need the express authorization. Both are enforced here, not only in the form.
     const published = legalPublished();
-    const requirements = publicBookingRequirements(published, business);
+    const requirements = publicBookingRequirements(legalSwitches(), business);
     if (requirements.closed) return fail(t.errors.bookingClosed);
     if (requirements.needsHealthConsent && input.healthConsent !== true) return fail(t.errors.consentRequired, "healthConsent");
 

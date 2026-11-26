@@ -6,7 +6,7 @@ import { getDb } from "@/db";
 import { categoryLabel } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
-import { legalPublished } from "@/lib/legal";
+import { legalPublished, legalSwitches } from "@/lib/legal";
 import { getPublicBusinessBySlug, listPublicServices } from "@/server/queries/public";
 import { publicBookingRequirements } from "@/server/services/booking";
 
@@ -49,7 +49,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/[slug]">
   if (!business) notFound();
 
   // While the legal texts are published, a business without address and contact cannot take online bookings.
-  const identityMissing = publicBookingRequirements(legalPublished(), business).closed;
+  const identityMissing = publicBookingRequirements(legalSwitches(), business).closed;
   const canBook = business.services.length > 0 && !identityMissing;
   return (
     <main className="flex-1 pb-28">

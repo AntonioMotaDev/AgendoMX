@@ -94,6 +94,8 @@ test.describe("public booking", () => {
     await second.getByRole("button", { name: "Confirmar cita" }).click();
     await expect(second.getByText("Ese horario acaba de ocuparse, elige otro.")).toBeVisible();
     // Sent back to the time step, where the taken slot is gone.
+    // The list comes back on the first open day: go to the day the slot was on (pickSlot uses the third) to see it gone.
+    await second.getByRole("radiogroup", { name: "Día" }).getByRole("radio").nth(2).click();
     const times = second.getByRole("radiogroup", { name: "Hora" }).getByRole("radio");
     await times.first().waitFor();
     expect(await times.allInnerTexts()).not.toContain(slot);

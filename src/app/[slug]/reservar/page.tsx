@@ -4,7 +4,7 @@ import { BookingWizard } from "@/components/booking/booking-wizard";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { optionalEnv } from "@/lib/env";
-import { legalPublished } from "@/lib/legal";
+import { legalPublished, legalSwitches } from "@/lib/legal";
 import { fillClientNotice, LEGAL_TEXTS } from "@/lib/legal-content";
 import { publicBookingRequirements } from "@/server/services/booking";
 import { turnstileMode } from "@/lib/turnstile";
@@ -21,7 +21,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   if (!found) notFound();
   const published = legalPublished();
   // The client notice names the business as controller: without its address and contact it cannot take online bookings.
-  const requirements = publicBookingRequirements(published, found.business);
+  const requirements = publicBookingRequirements(legalSwitches(), found.business);
   if (requirements.closed) redirect(`/${found.business.slug}`);
   const services = await listPublicServices(db, found.businessId);
   if (services.length === 0) redirect(`/${found.business.slug}`);

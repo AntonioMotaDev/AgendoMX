@@ -4,7 +4,7 @@ import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import { PanelNav } from "@/components/dashboard/panel-nav";
 import { Alert } from "@/components/ui/alert";
 import { copy } from "@/lib/copy";
-import { legalPublished } from "@/lib/legal";
+import { legalSwitches } from "@/lib/legal";
 import { getCurrentBusiness } from "@/lib/session";
 import { publicBookingRequirements } from "@/server/services/booking";
 import Link from "next/link";
@@ -14,13 +14,20 @@ export default async function PanelLayout({ children }: LayoutProps<"/app">) {
   const business = await getCurrentBusiness();
   if (!business || !business.onboardingCompletedAt) redirect("/app/onboarding");
   // While the legal texts are published, a business needs its address and a contact to take online bookings.
-  const { missing } = publicBookingRequirements(legalPublished(), business);
+  const { missing, healthUnavailable } = publicBookingRequirements(legalSwitches(), business);
   return (
     <>
       <ServiceWorkerRegister />
       <PanelNav />
       <InstallPrompt />
-      {missing.length > 0 ? (
+      {healthUnavailable ? (
+        <div className="mx-auto w-full max-w-3xl px-4 pt-4">
+          <Alert tone="info">
+            <p className="font-semibold">{copy.panel.legal.healthClosed.title}</p>
+            <p className="mt-1">{copy.panel.legal.healthClosed.body}</p>
+          </Alert>
+        </div>
+      ) : missing.length > 0 ? (
         <div className="mx-auto w-full max-w-3xl px-4 pt-4">
           <Alert tone="info">
             <p className="font-semibold">{copy.panel.legal.missing.title}</p>
