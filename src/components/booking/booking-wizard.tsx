@@ -84,6 +84,8 @@ export function BookingWizard({ slug, businessName, businessPlace, services, pre
 
   // Applies a slots response. Newer requests win; state changes only once a response arrives.
   const loadRequest = useRef(0);
+  // Day to go back to when the next answer arrives (after "that time was just taken"); null = the first open day.
+  const dayToKeep = useRef<string | null>(null);
   const applySlots = useCallback((mine: number, result: Awaited<ReturnType<typeof getSlotsAction>>) => {
     if (mine !== loadRequest.current) return;
     if (!result.ok) {
@@ -91,13 +93,17 @@ export function BookingWizard({ slug, businessName, businessPlace, services, pre
       setDays([]);
       return;
     }
+    const keep = dayToKeep.current;
+    dayToKeep.current = null;
     setDays(result.data.days);
-    setDate(result.data.days[0]?.date ?? null);
+    setDate(keep && result.data.days.some((d) => d.date === keep) ? keep : (result.data.days[0]?.date ?? null));
     setStart(null);
   }, []);
 
   // Event handlers reset the visible state first, then ask for slots.
-  function reloadSlots(id: string) {
+  // `keepDay`: stay on the day the person was looking at (a taken slot should not throw them back to the first day).
+  function reloadSlots(id: string, keepDay = false) {
+    dayToKeep.current = keepDay ? date : null;
     setDays(null);
     setSlotsError(null);
     setStart(null);
@@ -163,7 +169,7 @@ export function BookingWizard({ slug, businessName, businessPlace, services, pre
     if (field === "start") {
       setFormError(message);
       setStep("when");
-      reloadSlots(serviceId);
+      reloadSlots(serviceId, true);
     } else if (field && ["name", "phone", "email"].includes(field)) {
       setFieldErrors({ [field]: message });
     } else {

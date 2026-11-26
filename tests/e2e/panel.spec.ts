@@ -161,8 +161,9 @@ test.describe("owner panel", () => {
 
   test("the same time cannot be booked twice by hand, even picking a custom hour", async ({ page }) => {
     await signIn(page);
-    // First: a regular offered slot.
+    // First: a regular offered slot. The second open day, because late in the afternoon today may have a single time left.
     await page.goto("/app/citas/nueva");
+    await page.getByRole("radiogroup", { name: "Día" }).getByRole("radio").nth(1).click();
     await page.getByRole("radiogroup", { name: "Hora" }).getByRole("radio").nth(1).click();
     await page.getByLabel("Nombre").fill("Persona 1");
     await page.getByLabel("Celular").fill("55 2222 0001");
