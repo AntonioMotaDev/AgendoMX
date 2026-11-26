@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ContactSection, LocationSection, ProfileHero, ServicesSection } from "@/components/public/profile-sections";
+import { BookBar, BookingCard, InfoPanel, ProfileCover, ProfileIdentity, QuickActions, ServicesPanel } from "@/components/public/profile-sections";
+import { ProfileTabs } from "@/components/public/profile-tabs";
+import { ThemeScope } from "@/components/public/theme-scope";
 import { getDb } from "@/db";
 import { categoryLabel } from "@/lib/categories";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
 import { legalPublished } from "@/lib/legal";
-import { getPublicBusinessBySlug, listPublicServices } from "@/server/queries/public";
+import { toLocalDate, weekdayOf } from "@/lib/time";
+import { getPublicBusinessBySlug, getPublicHours, listPublicServices } from "@/server/queries/public";
 
 const t = copy.public.profile;
 
@@ -15,8 +18,8 @@ async function load(slug: string) {
   const db = await getDb();
   const found = await getPublicBusinessBySlug(db, slug);
   if (!found) return null;
-  const services = await listPublicServices(db, found.businessId);
-  return { ...found.business, services };
+  const [services, hours] = await Promise.all([listPublicServices(db, found.businessId), getPublicHours(db, found.businessId)]);
+  return { ...found.business, services, hours };
 }
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
@@ -48,16 +51,29 @@ export default async function PublicProfilePage({ params }: PageProps<"/[slug]">
   if (!business) notFound();
 
   const canBook = business.services.length > 0;
+  const todayWeekday = weekdayOf(toLocalDate(new Date(), business.timezone));
+
   return (
-    <main className="flex-1 pb-28">
-      <ProfileHero business={business} />
-      <div className="mx-auto mt-8 flex max-w-2xl flex-col gap-8 px-4">
-        <ServicesSection slug={business.slug} services={business.services} />
-        <LocationSection business={business} />
-        <ContactSection business={business} />
-        <p className="text-sm text-ink-muted">{t.cancellation(business.cancellationMinHours)}</p>
-        {business.cancellationPolicyText ? <p className="whitespace-pre-line text-sm text-ink-muted">{business.cancellationPolicyText}</p> : null}
-        <footer className="flex flex-col items-center gap-1 border-t border-line pt-4 text-center text-xs text-ink-muted">
+    <ThemeScope theme={business.theme}>
+      <main className={`mx-auto w-full max-w-[1100px] flex-1 sm:px-7 sm:pt-5 lg:px-8 lg:pt-6 ${canBook ? "pb-28 lg:pb-12" : "pb-12"}`}>
+        <ProfileCover business={business} />
+        <div className="grid gap-6 px-4 sm:px-[22px] lg:grid-cols-[minmax(0,1fr)_350px] lg:gap-x-10 lg:px-6">
+          <div className="flex min-w-0 flex-col gap-4">
+            <ProfileIdentity business={business} />
+            <QuickActions business={business} />
+            <ProfileTabs
+              labels={{ group: t.tabsLabel, services: t.tabServices, info: t.tabInfo }}
+              services={<ServicesPanel slug={business.slug} services={business.services} />}
+              info={<InfoPanel business={business} hours={business.hours} todayWeekday={todayWeekday} />}
+            />
+          </div>
+          {canBook ? (
+            <aside className="hidden lg:mt-5 lg:block">
+              <BookingCard slug={business.slug} cancellationMinHours={business.cancellationMinHours} city={business.city} />
+            </aside>
+          ) : null}
+        </div>
+        <footer className="mt-10 flex flex-col items-center gap-1 px-4 text-center text-xs text-th-muted">
           {legalPublished() ? (
             <Link href={`/${business.slug}/privacidad`} className="underline underline-offset-2">
               {t.privacyLink}
@@ -65,19 +81,8 @@ export default async function PublicProfilePage({ params }: PageProps<"/[slug]">
           ) : null}
           {t.powered}
         </footer>
-      </div>
-      {canBook ? (
-        <div className="fixed inset-x-0 bottom-0 border-t border-line bg-surface/95 p-3 backdrop-blur">
-          <div className="mx-auto max-w-2xl">
-            <Link
-              href={`/${business.slug}/reservar`}
-              className="flex min-h-12 w-full items-center justify-center rounded-md bg-ink px-5 text-base font-semibold text-surface hover:bg-ink/90"
-            >
-              {t.book}
-            </Link>
-          </div>
-        </div>
-      ) : null}
-    </main>
+      </main>
+      {canBook ? <BookBar slug={business.slug} /> : null}
+    </ThemeScope>
   );
 }

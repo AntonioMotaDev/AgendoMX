@@ -1,6 +1,7 @@
-import { ChevronRight, ImageIcon, Link2, MapPin, Settings2, Share2, UserCog, Users, type LucideIcon } from "lucide-react";
+import { ChevronRight, ImageIcon, Link2, MapPin, Palette, Settings2, Share2, UserCog, Users, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { BusinessAvatar } from "@/components/dashboard/business-avatar";
 import { copy } from "@/lib/copy";
 import { appUrl } from "@/lib/env";
@@ -13,6 +14,7 @@ const t = copy.panel.profile;
 
 const SECTIONS: Array<{ href: string; title: string; hint: string; Icon: LucideIcon }> = [
   { href: "/app/perfil/imagenes", ...t.sections.images, Icon: ImageIcon },
+  { href: "/app/perfil/apariencia", ...t.sections.appearance, Icon: Palette },
   { href: "/app/perfil/informacion", ...t.sections.info, Icon: MapPin },
   { href: "/app/perfil/redes", ...t.sections.social, Icon: Share2 },
   { href: "/app/perfil/link", ...t.sections.link, Icon: Link2 },
@@ -60,6 +62,11 @@ export default async function ProfilePage() {
           </li>
         ))}
       </ul>
+
+      {/* On wide screens the sidebar already has this button. */}
+      <div className="lg:hidden">
+        <LogoutButton />
+      </div>
     </section>
   );
 }

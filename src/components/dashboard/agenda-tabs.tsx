@@ -12,16 +12,17 @@ const ITEMS: Array<{ key: AgendaView; href: string; label: string }> = [
   { key: "week", href: "/app/semana", label: t.tabs.week },
 ];
 
+/** Hoy / Mañana / Semana. Real links, so each view keeps its own URL and works with the back button. */
 export function AgendaTabs({ current }: { current: AgendaView }) {
   return (
-    <nav aria-label={t.tabsLabel} className="flex gap-1 rounded-lg bg-ink/5 p-1">
+    <nav aria-label={t.tabsLabel} className="flex gap-1 rounded-2xl bg-ink/5 p-1 lg:max-w-md">
       {ITEMS.map((i) => (
         <Link
           key={i.key}
           href={i.href}
           aria-current={i.key === current ? "page" : undefined}
           className={cn(
-            "flex min-h-11 flex-1 items-center justify-center rounded-md text-base font-semibold",
+            "flex min-h-11 flex-1 items-center justify-center rounded-xl text-[15px] font-bold",
             i.key === current ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
           )}
         >

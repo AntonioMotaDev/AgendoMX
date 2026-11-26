@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { BookingWizard } from "@/components/booking/booking-wizard";
+import { ThemeScope } from "@/components/public/theme-scope";
 import { getDb } from "@/db";
 import { copy } from "@/lib/copy";
 import { optionalEnv } from "@/lib/env";
@@ -26,15 +27,20 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   // Production-like runtimes without keys refuse bookings on the server; the page just does not render the widget.
   const siteKey = turnstileMode(config) === "enforce" ? (optionalEnv("TURNSTILE_SITE_KEY") ?? null) : null;
 
+  const place = [found.business.address, found.business.city].filter(Boolean).join(", ") || null;
+
   return (
-    <BookingWizard
-      slug={found.business.slug}
-      businessName={found.business.name}
-      services={services}
-      preselectedServiceId={preselected}
-      manualConfirmation={found.business.confirmationMode === "manual"}
-      turnstileSiteKey={siteKey}
-      privacyNotice={legalPublished() ? fillClientNotice(LEGAL_TEXTS.privacyClientsShort, found.business) : null}
-    />
+    <ThemeScope theme={found.business.theme}>
+      <BookingWizard
+        slug={found.business.slug}
+        businessName={found.business.name}
+        businessPlace={place}
+        services={services}
+        preselectedServiceId={preselected}
+        manualConfirmation={found.business.confirmationMode === "manual"}
+        turnstileSiteKey={siteKey}
+        privacyNotice={legalPublished() ? fillClientNotice(LEGAL_TEXTS.privacyClientsShort, found.business) : null}
+      />
+    </ThemeScope>
   );
 }

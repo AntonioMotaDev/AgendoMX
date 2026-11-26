@@ -9,8 +9,8 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "@/db/schema";
 import { saveBusinessProfile } from "@/server/actions/business-writes";
-import { changeSlug, updateBookingSettings, updateProfileInfo, updateSocialLinks } from "@/server/actions/profile-writes";
-import { bookingSettingsSchema, profileInfoSchema, socialLinksSchema } from "@/lib/validators/profile";
+import { changeSlug, updateBookingSettings, updateProfileInfo, updateSocialLinks, updateTheme } from "@/server/actions/profile-writes";
+import { bookingSettingsSchema, profileInfoSchema, socialLinksSchema, themeSchema } from "@/lib/validators/profile";
 
 const url = process.env.DATABASE_URL_TEST;
 
@@ -85,6 +85,18 @@ describe.skipIf(!url)("profile writes (Postgres)", () => {
     const results = await Promise.all([changeSlug(db, a, "el-elegido"), changeSlug(db, b, "el-elegido")]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     expect(results.filter((r) => !r.ok)).toHaveLength(1);
+  });
+
+  it("starts every business on the Studio theme, changes only its own, and the database refuses unknown themes", async () => {
+    expect((await row(a)).theme).toBe("studio");
+    expect((await row(b)).theme).toBe("studio");
+
+    await updateTheme(db, a, themeSchema.parse({ theme: "noir" }));
+    expect((await row(a)).theme).toBe("noir");
+    expect((await row(b)).theme).toBe("studio");
+
+    await expect(client`UPDATE businesses SET theme = 'neon' WHERE id = ${a}`).rejects.toThrow();
+    expect((await row(a)).theme).toBe("noir");
   });
 
   it("saves booking settings for its own business only", async () => {

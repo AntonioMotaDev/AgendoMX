@@ -1,10 +1,11 @@
 import { and, asc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import { appointments, availabilityExceptions, availabilityRules, businesses, clients, services, user } from "@/db/schema";
 import { isUuid } from "@/lib/ids";
+import { themeOrDefault, type BusinessTheme } from "@/lib/themes";
 import { addDays, toLocalDate } from "@/lib/time";
 import { isPublicToken } from "@/server/services/booking";
 import type { AvailabilityException, AvailabilityRule, BusyInterval } from "@/server/services/availability";
-import { getPrimaryStaff, type Reader } from "./business";
+import { getPrimaryStaff, getScheduleRules, type Reader } from "./business";
 
 /**
  * Everything the public pages and the booking flow read. Rows are mapped into
@@ -44,6 +45,7 @@ export interface PublicBusiness {
   logoUrl: string | null;
   coverUrl: string | null;
   timezone: string;
+  theme: BusinessTheme;
   confirmationMode: "auto" | "manual";
   cancellationMinHours: number;
   cancellationPolicyText: string | null;
@@ -111,6 +113,7 @@ export async function getPublicBusinessBySlug(db: Reader, slug: string): Promise
       logoUrl: row.logoUrl,
       coverUrl: row.coverUrl,
       timezone: row.timezone,
+      theme: themeOrDefault(row.theme),
       confirmationMode: row.confirmationMode,
       cancellationMinHours: row.cancellationMinHours,
       cancellationPolicyText: row.cancellationPolicyText,
@@ -118,6 +121,23 @@ export async function getPublicBusinessBySlug(db: Reader, slug: string): Promise
       services: [],
     },
   };
+}
+
+export interface PublicHoursDay {
+  /** 0 = Sunday … 6 = Saturday, like the stored rules. */
+  weekday: number;
+  /** Local "HH:MM" ranges in the business's zone; empty = closed. */
+  ranges: Array<{ start: string; end: string }>;
+}
+
+/** The weekly hours people see on the profile, Monday first. Exceptions (holidays) are not part of this summary. */
+export async function getPublicHours(db: Reader, businessId: string): Promise<PublicHoursDay[]> {
+  const staff = await getPrimaryStaff(db, businessId);
+  const rules = staff ? await getScheduleRules(db, staff.id) : [];
+  return [1, 2, 3, 4, 5, 6, 0].map((weekday) => ({
+    weekday,
+    ranges: rules.filter((r) => r.weekday === weekday).map((r) => ({ start: r.startTime.slice(0, 5), end: r.endTime.slice(0, 5) })),
+  }));
 }
 
 export type BusinessRow = typeof businesses.$inferSelect;
@@ -213,6 +233,7 @@ export interface ClientAppointment {
     name: string;
     category: BusinessRow["category"];
     timezone: string;
+    theme: BusinessTheme;
     address: string | null;
     city: string | null;
     phone: string | null;
@@ -252,6 +273,7 @@ export async function getAppointmentByToken(db: Reader, token: unknown): Promise
       name: b.name,
       category: b.category,
       timezone: b.timezone,
+      theme: themeOrDefault(b.theme),
       address: b.address,
       city: b.city,
       phone: b.phone,

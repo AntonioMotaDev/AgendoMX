@@ -11,7 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { businessCategory, businessPlan, confirmationMode } from "./enums";
+import { businessCategory, businessPlan, businessTheme, confirmationMode } from "./enums";
 
 export const businesses = pgTable(
   "businesses",
@@ -45,6 +45,7 @@ export const businesses = pgTable(
     logoUrl: text("logo_url"),
     coverUrl: text("cover_url"),
     timezone: text("timezone").notNull().default("America/Mexico_City"),
+    theme: businessTheme("theme").notNull().default("studio"),
     isListed: boolean("is_listed").notNull().default(false),
     bookingLeadTimeMin: integer("booking_lead_time_min").notNull().default(60),
     bookingWindowDays: integer("booking_window_days").notNull().default(30),

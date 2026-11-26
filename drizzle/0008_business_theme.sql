@@ -1,0 +1,2 @@
+CREATE TYPE "public"."business_theme" AS ENUM('studio', 'noir', 'bloom', 'earth', 'coast', 'signal');--> statement-breakpoint
+ALTER TABLE "businesses" ADD COLUMN "theme" "business_theme" DEFAULT 'studio' NOT NULL;

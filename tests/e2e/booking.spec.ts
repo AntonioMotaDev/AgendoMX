@@ -93,7 +93,9 @@ test.describe("public booking", () => {
 
     await second.getByRole("button", { name: "Confirmar cita" }).click();
     await expect(second.getByText("Ese horario acaba de ocuparse, elige otro.")).toBeVisible();
-    // Sent back to the time step, where the taken slot is gone.
+    // Sent back to the time step, on the same day they were choosing, where the taken slot is gone.
+    // pickSlot chose the third open day: it must still be the selected one, not the first.
+    await expect(second.getByRole("radiogroup", { name: "Día" }).getByRole("radio").nth(2)).toHaveAttribute("aria-checked", "true");
     const times = second.getByRole("radiogroup", { name: "Hora" }).getByRole("radio");
     await times.first().waitFor();
     expect(await times.allInnerTexts()).not.toContain(slot);
@@ -102,6 +104,16 @@ test.describe("public booking", () => {
     expect(saved).toHaveLength(1);
     expect(saved[0]!.clientName).toBe("Primera Persona");
     await second.context().close();
+  });
+
+  test("opening the details step does not submit the form: no errors, no booking", async ({ page }) => {
+    await startBooking(page);
+    await pickSlot(page);
+    await expect(page.getByLabel("Tu nombre")).toBeVisible();
+    // A submit would answer with "Escribe tu nombre." after a round trip to the server: give it time to show up.
+    await page.waitForTimeout(800);
+    await expect(page.getByText("Escribe tu nombre.")).toHaveCount(0);
+    expect(await appointmentsOf(OWNER_A.slug)).toHaveLength(0);
   });
 
   test("an invalid phone is rejected and nothing is created", async ({ page }) => {
