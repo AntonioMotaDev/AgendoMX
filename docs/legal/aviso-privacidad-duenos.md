@@ -5,7 +5,7 @@
 
 ## 1. Quién es el responsable
 
-**Jorge Antonio Mota Villa**, persona física, que opera **AgendoMX de FORMA/01** ("AgendoMX"), con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398, es responsable del tratamiento de los datos personales de las personas que crean una cuenta para administrar su negocio en agendomx.com. Él mismo atiende las solicitudes sobre datos personales. Contacto de privacidad: `[CORREO DE PRIVACIDAD]`.
+**Jorge Antonio Mota Villa**, persona física, que opera **AgendoMX de FORMA/01** ("AgendoMX"), con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398, es responsable del tratamiento de los datos personales de las personas que crean una cuenta para administrar su negocio en agendomx.com. Él mismo atiende las solicitudes sobre datos personales. Contacto de privacidad: privacidad@agendomx.com.
 
 Este aviso cubre **solo los datos de tu cuenta y de tu uso de AgendoMX**. Los datos de *tus clientes* los tratas tú como responsable y AgendoMX como encargado (ver los Términos, Anexo A, y el aviso para clientes).
 
@@ -33,7 +33,7 @@ Los que nos das al registrarte y usar la plataforma:
 
 **Finalidades que no son necesarias:** hoy **no** existen. No usamos tus datos para publicidad ni perfilamiento, ni los compartimos para mercadotecnia. Si en el futuro enviáramos novedades o promociones, te pediremos tu consentimiento por separado y podrás negarte sin perder el servicio.
 
-**Cómo limitar el uso o divulgación de tus datos:** escribe a `[CORREO DE PRIVACIDAD]`. Hoy solo los usamos para las finalidades necesarias y no los divulgamos, salvo a los proveedores del apartado siguiente y a las autoridades.
+**Cómo limitar el uso o divulgación de tus datos:** escribe a privacidad@agendomx.com. Hoy solo los usamos para las finalidades necesarias y no los divulgamos, salvo a los proveedores del apartado siguiente y a las autoridades.
 
 ## 4. Con quién compartimos tus datos
 
@@ -72,7 +72,7 @@ Tienes derecho a **Acceder** a tus datos y conocer cómo los tratamos, **Rectifi
 
 - **Rectificar:** corrige la mayoría de tus datos directamente en **Perfil**.
 - **Cancelar:** usa **Perfil → Mi cuenta → Eliminar mi cuenta**.
-- **Acceder, oponerte y cualquier otro derecho:** escribe a `[CORREO DE PRIVACIDAD]`. Si quieres una **copia de tus datos** antes de eliminar tu cuenta, pídela por ese mismo medio; la atendemos manualmente en un máximo de 10 días hábiles.
+- **Acceder, oponerte y cualquier otro derecho:** escribe a privacidad@agendomx.com. Si quieres una **copia de tus datos** antes de eliminar tu cuenta, pídela por ese mismo medio; la atendemos manualmente en un máximo de 10 días hábiles.
 - **Qué debe contener tu solicitud:** tu nombre y el medio para responderte, lo necesario para acreditar tu identidad (y tu representación, si actúas por otra persona), una descripción clara de los datos involucrados, el derecho que quieres ejercer y los elementos que ayuden a localizar tus datos. Para rectificar, indica los cambios y aporta documentos que lo justifiquen.
 
 **Plazos:** te comunicaremos nuestra determinación en un máximo de **20 días hábiles** desde que recibamos tu solicitud y, si procede, haremos efectivo tu derecho en **15 días hábiles** desde esa comunicación. Cada plazo puede ampliarse una sola vez por un periodo igual si hay una razón justificada, y te la comunicaremos.

@@ -8,7 +8,7 @@
 
 ## A. Versión corta (se muestra en el formulario de reserva, junto al botón "Confirmar cita")
 
-> **{Nombre del negocio}**, con domicilio en {domicilio del negocio}, es el responsable de tus datos. Usará tu nombre, tu celular y tu correo (si lo escribes), además de los datos de tu cita, solo para gestionar tu cita, contactarte sobre ella y, si dejaste correo, enviarte la confirmación y un recordatorio. No pedimos datos sensibles ni los usamos para publicidad. **AgendoMX**, la plataforma de reservas, los procesa por cuenta del negocio con proveedores en México y en el extranjero (principalmente Estados Unidos). Para limitar el uso o divulgación de tus datos o ejercer tus derechos de acceso, rectificación, cancelación y oposición, escribe al negocio o a `[CORREO DE PRIVACIDAD]`. [Aviso de privacidad completo](/{slug}/privacidad)
+> **{Nombre del negocio}**, con domicilio en {domicilio del negocio}, es el responsable de tus datos. Usará tu nombre, tu celular y tu correo (si lo escribes), además de los datos de tu cita, solo para gestionar tu cita, contactarte sobre ella y, si dejaste correo, enviarte la confirmación y un recordatorio. No pedimos datos sensibles ni los usamos para publicidad. **AgendoMX**, la plataforma de reservas, los procesa por cuenta del negocio con proveedores en México y en el extranjero (principalmente Estados Unidos). Para limitar el uso o divulgación de tus datos o ejercer tus derechos de acceso, rectificación, cancelación y oposición, escribe al negocio o a privacidad@agendomx.com. [Aviso de privacidad completo](/{slug}/privacidad)
 
 ---
 
@@ -24,7 +24,7 @@
 
 El responsable de tus datos es **{Nombre / razón social del negocio}**, con domicilio en `{domicilio del negocio}` y medios de contacto `{teléfono / WhatsApp del negocio}`.
 
-**AgendoMX de FORMA/01**, operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398 (contacto: `[CORREO DE PRIVACIDAD]`), es la plataforma tecnológica que el negocio usa para recibir reservas. Trata tus datos **solo por cuenta e instrucciones del negocio**, como encargado, y no los usa para sus propios fines. **[VERIFICAR redacción de la relación responsable–encargado]**
+**AgendoMX de FORMA/01**, operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398 (contacto: privacidad@agendomx.com), es la plataforma tecnológica que el negocio usa para recibir reservas. Trata tus datos **solo por cuenta e instrucciones del negocio**, como encargado, y no los usa para sus propios fines. **[VERIFICAR redacción de la relación responsable–encargado]**
 
 ### 2. Qué datos recabamos
 
@@ -47,7 +47,7 @@ El responsable de tus datos es **{Nombre / razón social del negocio}**, con dom
 
 **Finalidades que no son necesarias:** hoy no hay. No usamos tus datos para publicidad. Si el negocio quisiera usarlos para otra finalidad (por ejemplo promociones), debe pedirte tu consentimiento por separado y podrás negarte sin perder tu cita.
 
-**Cómo limitar el uso o divulgación de tus datos:** escribe al negocio o a `[CORREO DE PRIVACIDAD]`.
+**Cómo limitar el uso o divulgación de tus datos:** escribe al negocio o a privacidad@agendomx.com.
 
 ### 4. Quién ve tus datos y a dónde se envían
 
@@ -72,7 +72,7 @@ El negocio decide cuánto conserva tu registro: tus datos permanecen mientras el
 Puedes **acceder** a tus datos y conocer cómo se tratan, **rectificarlos** si son inexactos, incompletos o están desactualizados, pedir su **cancelación** u **oponerte** a su uso por causa legítima. También puedes revocar tu consentimiento y limitar el uso o divulgación de tus datos.
 
 - Dirígete **al negocio**: es el responsable y decide sobre tus datos. El negocio puede **borrar tus datos personales** (nombre, celular y correo) desde su panel. Si tienes una cita próxima, primero debe cancelarse.
-- O escribe a `[CORREO DE PRIVACIDAD]` indicando tu nombre y medio para responderte, el negocio, el derecho que quieres ejercer, una descripción de los datos y cómo identificarte (y tu representación, si actúas por otra persona): **reenviaremos tu solicitud al negocio en un máximo de 3 días hábiles** y la apoyaremos técnicamente.
+- O escribe a privacidad@agendomx.com indicando tu nombre y medio para responderte, el negocio, el derecho que quieres ejercer, una descripción de los datos y cómo identificarte (y tu representación, si actúas por otra persona): **reenviaremos tu solicitud al negocio en un máximo de 3 días hábiles** y la apoyaremos técnicamente.
 
 **Plazos que debe cumplir el negocio:** comunicarte su determinación en un máximo de **20 días hábiles** desde que recibe tu solicitud y, si procede, hacerla efectiva en **15 días hábiles** desde esa comunicación. Cada plazo puede ampliarse una sola vez por un periodo igual si hay una razón justificada. El ejercicio de estos derechos es **gratuito**, salvo los costos de reproducción o envío de copias.
 

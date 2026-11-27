@@ -75,7 +75,7 @@ AgendoMX se ofrece "tal cual". En la medida que la ley lo permita, no somos resp
 - **Borrado de un cliente.** Puedes borrar los datos personales de un cliente desde **Perfil → Tus clientes**; sus citas pasadas quedan en tu agenda sin sus datos.
 - **Cierre por nuestra parte.** Podemos suspender o cerrar cuentas por incumplimiento o por riesgo para la plataforma. Si cerramos la cuenta, **30 días** después eliminaremos tus datos, salvo lo que debamos conservar por ley.
 - **Copias de seguridad.** Los respaldos desaparecen a los 30 días.
-- **Copia de tus datos.** AgendoMX no tiene una función automática de exportación. Si quieres una copia de tus datos antes de eliminar tu cuenta, escribe a `[CORREO DE CONTACTO]` y la atendemos manualmente en un máximo de 10 días hábiles.
+- **Copia de tus datos.** AgendoMX no tiene una función automática de exportación. Si quieres una copia de tus datos antes de eliminar tu cuenta, escribe a contacto@agendomx.com y la atendemos manualmente en un máximo de 10 días hábiles.
 - **Bloqueo y supresión.** La ley distingue cancelar los datos (que prevé un bloqueo por el plazo de prescripción de las acciones derivadas de la relación, y después la supresión) de eliminarlos sin más. Hoy el sistema solo borra; no existe un periodo de bloqueo. **[VERIFICAR si procede un bloqueo previo y qué datos deben conservarse]**
 
 ## 12. Cambios a estos términos
@@ -88,7 +88,7 @@ Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Para su 
 
 ## 14. Contacto
 
-`[CORREO DE CONTACTO]` · Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398
+contacto@agendomx.com · Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398
 
 ---
 

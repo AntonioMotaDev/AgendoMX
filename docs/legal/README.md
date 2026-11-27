@@ -121,7 +121,7 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 
 ## Marcas que siguen abiertas
 
-- **Datos tuyos (`[ASÍ]`):** correo de privacidad, correo de contacto, ciudad/estado de jurisdicción (propuesta: San Luis Potosí, S.L.P., por confirmar), fecha. Domicilio completo ya puesto (San Luis Potosí, S.L.P., C.P. 78398).
+- **Datos tuyos (`[ASÍ]`):** ciudad/estado de jurisdicción (propuesta: San Luis Potosí, S.L.P., por confirmar), fecha. Domicilio completo ya puesto (San Luis Potosí, S.L.P., C.P. 78398).
 - **Solo interpretación legal (`[VERIFICAR]`):** si el bloqueo previo es obligatorio; plazo máximo de conservación; menores; que el Anexo A sirva como contrato de encargo; si Turnstile/Sentry tratan datos para fines propios; verificación de capacidad del dueño; efecto del bloqueo por versión nueva; redacción de la relación responsable–encargado y de las condiciones de la reserva; validez de la jurisdicción.
 - **Limitación de responsabilidad:** esqueleto sin tope (`[Tope de responsabilidad...]`).
 - **Solo salud (no publicado):** forma del consentimiento (texto A2 y sección D).
@@ -136,7 +136,7 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 6. **Proceso de incidentes:** documentado en `docs/INCIDENTES.md` (72 h al negocio, de inmediato a titulares si la afectación es significativa) con registro en `registro-incidentes.md`. Falta que lo leas y lo hagas tuyo; el aviso a la autoridad sigue **[VERIFICAR]**.
 7. **Ficha por proveedor:** plantilla y fichas en `proveedores.md`; falta aceptar y guardar el DPA de cada proveedor y llenar las celdas `[ ]`.
 8. **Datos que faltan** (`[ASÍ]`): ver "Marcas que siguen abiertas".
-9. **Correos de privacidad y contacto:** crear `privacidad@` y `contacto@` (por ejemplo con Cloudflare Email Routing) y ponerlos en los textos.
+9. **Correos de privacidad y contacto:** creados (`privacidad@` y `contacto@`); verificar que lleguen y que el SPF/Resend no se haya roto.
 
 ## Matriz de cumplimiento (obligación → documento → función → evidencia)
 
@@ -179,7 +179,7 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 - [x] Aviso de privacidad visible antes de pedir los datos en la reserva.
 - [x] Runbook de incidentes y plantilla de fichas de proveedores (falta llenarlas).
 - [ ] Aceptar y guardar el DPA de cada proveedor.
-- [ ] Crear los correos `privacidad@` y `contacto@`.
+- [x] Correos `privacidad@agendomx.com` y `contacto@agendomx.com` creados y puestos en los textos (26-27 nov 2026). Falta probar que lleguen y que Resend siga verificado.
 - [ ] Confirmar jurisdicción y poner la fecha.
 - [ ] Quitar las marcas restantes (ver "Marcas que siguen abiertas") **solo cuando tú o un abogado las resuelvan**.
 - [ ] Guardar copia de la versión publicada.
