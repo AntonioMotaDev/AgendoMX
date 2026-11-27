@@ -24,7 +24,7 @@
 
 El responsable de tus datos es **{Nombre / razón social del negocio}**, con domicilio en `{domicilio del negocio}` y medios de contacto `{teléfono / WhatsApp del negocio}`.
 
-**AgendoMX de FORMA/01**, operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, `[CIUDAD, ESTADO Y C.P.]` (contacto: `[CORREO DE PRIVACIDAD]`), es la plataforma tecnológica que el negocio usa para recibir reservas. Trata tus datos **solo por cuenta e instrucciones del negocio**, como encargado, y no los usa para sus propios fines. **[VERIFICAR redacción de la relación responsable–encargado]**
+**AgendoMX de FORMA/01**, operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398 (contacto: `[CORREO DE PRIVACIDAD]`), es la plataforma tecnológica que el negocio usa para recibir reservas. Trata tus datos **solo por cuenta e instrucciones del negocio**, como encargado, y no los usa para sus propios fines. **[VERIFICAR redacción de la relación responsable–encargado]**
 
 ### 2. Qué datos recabamos
 

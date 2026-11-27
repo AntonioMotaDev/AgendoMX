@@ -72,7 +72,7 @@ Construidas y **apagadas por la bandera `LEGAL_PUBLISHED`** (hoy encendida solo 
 | Aviso en la reserva | Aviso corto con enlace, sin casilla, que nombra al negocio y su domicilio; se guarda `privacy_notice_version` en la cita | **Hecho** |
 | Categorías de salud | **No se admiten al lanzar.** Con los textos publicados y `HEALTH_CATEGORIES_ENABLED` apagada: no se ofrecen en onboarding ni en Perfil (un negocio que ya la tiene la conserva), su reserva en línea queda cerrada (perfil sin enlaces, `/reservar` redirige, el servidor rechaza) y el panel lo explica. El flujo de la casilla de autorización y de `health_consent_at` sigue construido y se enciende con `HEALTH_CATEGORIES_ENABLED=true`. El resumen de la ley exige para datos sensibles consentimiento **expreso y escrito** (firma autógrafa, electrónica u otro mecanismo de autenticación): una casilla simple probablemente no basta. El texto de salud (aviso, sección D) no se publica | **Hecho** (apagado por defecto) |
 | Aviso en la reserva | El aviso corto se muestra en un recuadro **antes** de pedir los datos (no debajo del botón) y enlaza al integral; contiene los elementos del aviso simplificado (identidad y domicilio del responsable, datos, finalidades, medio para limitar el uso, enlace al integral) | **Hecho** |
-| Identidad de AgendoMX | Persona física **Jorge Antonio Mota Villa**, sin RFC por ahora (hoy es gratis y no factura); domicilio Reforma Agraria #640, col. Nuestra Señora de la Salud. Falta ciudad, estado y C.P. | Texto actualizado |
+| Identidad de AgendoMX | Persona física **Jorge Antonio Mota Villa**, sin RFC por ahora (hoy es gratis y no factura); domicilio Reforma Agraria #640, col. Nuestra Señora de la Salud, San Luis Potosí, S.L.P., C.P. 78398 | Texto actualizado |
 | Datos del responsable | Con los textos publicados, un negocio sin domicilio (calle, ciudad y estado) y sin teléfono o WhatsApp **no recibe reservas en línea**; el panel lo avisa y enlaza a Perfil → Información | **Hecho** |
 | Correos | Pie con enlace al aviso (el del negocio para clientes, `/privacidad` para el dueño), solo cuando los textos están publicados | **Hecho** |
 | Páginas | `/terminos`, `/privacidad` (dueños) y `/{slug}/privacidad` (clientes). Se generan desde `docs/legal/*.md` con `pnpm legal:sync` | **Hecho**, ocultas (404) en producción |
@@ -121,7 +121,7 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 
 ## Marcas que siguen abiertas
 
-- **Datos tuyos (`[ASÍ]`):** ciudad, estado y C.P. del domicilio, correo de privacidad, correo de contacto, ciudad/estado de jurisdicción, fecha.
+- **Datos tuyos (`[ASÍ]`):** correo de privacidad, correo de contacto, ciudad/estado de jurisdicción (propuesta: San Luis Potosí, S.L.P., por confirmar), fecha. Domicilio completo ya puesto (San Luis Potosí, S.L.P., C.P. 78398).
 - **Solo interpretación legal (`[VERIFICAR]`):** si el bloqueo previo es obligatorio; plazo máximo de conservación; menores; que el Anexo A sirva como contrato de encargo; si Turnstile/Sentry tratan datos para fines propios; verificación de capacidad del dueño; efecto del bloqueo por versión nueva; redacción de la relación responsable–encargado y de las condiciones de la reserva; validez de la jurisdicción.
 - **Limitación de responsabilidad:** esqueleto sin tope (`[Tope de responsabilidad...]`).
 - **Solo salud (no publicado):** forma del consentimiento (texto A2 y sección D).
@@ -151,7 +151,7 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 | Cancelación y supresión | Avisos y términos | Eliminar cuenta, borrar cliente, expiración de respaldos | Pruebas de integración; sin bitácora de solicitudes | Borrado sin bloqueo **[VERIFICAR]** |
 | Incidentes de seguridad | Anexo A cl. 9 | Runbook `docs/INCIDENTES.md` | `registro-incidentes.md` | Documentado; sin pruebas de simulacro |
 | Subencargados | Avisos y Anexo A cl. 6 | `proveedores.md` | Contratos/DPA guardados | **Pendiente:** aceptar y guardar los DPA |
-| Identidad del responsable | Los tres | Negocio sin domicilio/contacto no recibe reservas | — | Nombre y domicilio puestos; falta ciudad/estado/C.P. y correos |
+| Identidad del responsable | Los tres | Negocio sin domicilio/contacto no recibe reservas | — | Nombre y domicilio completos; faltan los correos |
 
 ## Preguntas para la persona de legal
 
@@ -180,6 +180,6 @@ La revisión se tomó como insumo, no como autoridad. Resumen de la decisión po
 - [x] Runbook de incidentes y plantilla de fichas de proveedores (falta llenarlas).
 - [ ] Aceptar y guardar el DPA de cada proveedor.
 - [ ] Crear los correos `privacidad@` y `contacto@`.
-- [ ] Completar ciudad, estado y C.P., jurisdicción y fecha.
+- [ ] Confirmar jurisdicción y poner la fecha.
 - [ ] Quitar las marcas restantes (ver "Marcas que siguen abiertas") **solo cuando tú o un abogado las resuelvan**.
 - [ ] Guardar copia de la versión publicada.

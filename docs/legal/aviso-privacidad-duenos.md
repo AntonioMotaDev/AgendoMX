@@ -5,7 +5,7 @@
 
 ## 1. Quién es el responsable
 
-**Jorge Antonio Mota Villa**, persona física, que opera **AgendoMX de FORMA/01** ("AgendoMX"), con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, `[CIUDAD, ESTADO Y C.P.]`, es responsable del tratamiento de los datos personales de las personas que crean una cuenta para administrar su negocio en agendomx.com. Él mismo atiende las solicitudes sobre datos personales. Contacto de privacidad: `[CORREO DE PRIVACIDAD]`.
+**Jorge Antonio Mota Villa**, persona física, que opera **AgendoMX de FORMA/01** ("AgendoMX"), con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398, es responsable del tratamiento de los datos personales de las personas que crean una cuenta para administrar su negocio en agendomx.com. Él mismo atiende las solicitudes sobre datos personales. Contacto de privacidad: `[CORREO DE PRIVACIDAD]`.
 
 Este aviso cubre **solo los datos de tu cuenta y de tu uso de AgendoMX**. Los datos de *tus clientes* los tratas tú como responsable y AgendoMX como encargado (ver los Términos, Anexo A, y el aviso para clientes).
 

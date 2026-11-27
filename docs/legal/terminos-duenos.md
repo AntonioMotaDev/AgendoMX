@@ -5,7 +5,7 @@
 
 ## 1. Quiénes somos y qué es AgendoMX
 
-AgendoMX de FORMA/01 ("AgendoMX") es una plataforma web operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, `[CIUDAD, ESTADO Y C.P.]`, para que negocios que trabajan por cita (barberías, salones, estudios, etc.) tengan un perfil público, reciban reservas y administren su agenda. Estos términos regulan el uso de la plataforma por parte de quien crea una cuenta para su negocio ("tú" o "el Negocio").
+AgendoMX de FORMA/01 ("AgendoMX") es una plataforma web operada por **Jorge Antonio Mota Villa**, persona física, con domicilio en Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398, para que negocios que trabajan por cita (barberías, salones, estudios, etc.) tengan un perfil público, reciban reservas y administren su agenda. Estos términos regulan el uso de la plataforma por parte de quien crea una cuenta para su negocio ("tú" o "el Negocio").
 
 AgendoMX es una **herramienta de agenda y reservas**. No presta los servicios de tus clientes, no es un expediente clínico y no procesa pagos.
 
@@ -88,7 +88,7 @@ Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Para su 
 
 ## 14. Contacto
 
-`[CORREO DE CONTACTO]` · Reforma Agraria #640, colonia Nuestra Señora de la Salud, `[CIUDAD, ESTADO Y C.P.]`
+`[CORREO DE CONTACTO]` · Reforma Agraria #640, colonia Nuestra Señora de la Salud, San Luis Potosí, San Luis Potosí, C.P. 78398
 
 ---
 
