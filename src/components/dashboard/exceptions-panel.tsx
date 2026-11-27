@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -102,7 +103,7 @@ export function ExceptionsPanel({ days, today }: { days: ExceptionDay[]; today: 
       {error ? <Alert tone="error">{error}</Alert> : null}
 
       {days.length === 0 ? (
-        <p className="rounded-lg border border-line bg-surface p-4 text-center text-sm text-ink-muted">{t.emptyTitle}</p>
+        <EmptyState kind="emptyDays" title={t.emptyTitle} />
       ) : (
         <ul className="flex flex-col divide-y divide-line rounded-lg border border-line bg-surface">
           {days.map((day) => {

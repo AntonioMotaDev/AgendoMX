@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { renderSVG } from "uqr";
@@ -101,10 +102,7 @@ export async function AgendaScreen({ day }: { day: "today" | "tomorrow" }) {
 
         <div className="min-w-0 sm:col-span-2 lg:col-span-1 lg:col-start-1 lg:row-span-4 lg:row-start-1">
           {rows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-stone p-6 text-center">
-              <p className="text-base font-bold text-ink">{day === "today" ? t.emptyToday : t.emptyTomorrow}</p>
-              <p className="mt-1 text-sm text-ink-muted">{day === "today" ? t.emptyTodayHint : t.emptyTomorrowHint}</p>
-            </div>
+            <EmptyState kind="emptyDay" title={day === "today" ? t.emptyToday : t.emptyTomorrow} hint={day === "today" ? t.emptyTodayHint : t.emptyTomorrowHint} />
           ) : (
             <section aria-label={t.count(rows.length)}>
               <p className="mb-2 text-sm text-ink-muted">{t.count(rows.length)}</p>

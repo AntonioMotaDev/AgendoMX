@@ -19,6 +19,11 @@ export const copy = {
   panel: panelCopy,
   public: publicCopy,
   auth: {
+    // Large panel next to the forms (desktop and iPad landscape).
+    aside: {
+      label: "Sobre AgendoMX",
+      body: "Comparte tu página, deja que tus clientes reserven solos y mantén tu agenda en orden desde el celular.",
+    },
     common: {
       email: "Correo electrónico",
       password: "Contraseña",

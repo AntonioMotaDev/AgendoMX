@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Metadata } from "next";
 import { ClientList } from "@/components/dashboard/client-list";
 import { ProfileSubpage } from "@/components/dashboard/profile-subpage";
@@ -18,10 +19,7 @@ export default async function ClientsPage() {
   return (
     <ProfileSubpage title={t.title} subtitle={t.subtitle}>
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-line bg-surface p-6 text-center">
-          <p className="text-base font-semibold text-ink">{t.empty}</p>
-          <p className="mt-1 text-sm text-ink-muted">{t.emptyHint}</p>
-        </div>
+        <EmptyState kind="emptyClients" title={t.empty} hint={t.emptyHint} />
       ) : (
         <>
           <p className="text-sm text-ink-muted">{t.count(rows.length)}</p>

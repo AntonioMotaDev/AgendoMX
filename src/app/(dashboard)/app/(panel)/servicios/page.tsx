@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -32,10 +33,7 @@ export default async function ServicesPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-line bg-surface p-6 text-center">
-          <p className="text-base font-semibold text-ink">{t.emptyTitle}</p>
-          <p className="mt-1 text-sm text-ink-muted">{t.emptyHint}</p>
-        </div>
+        <EmptyState kind="emptyServices" title={t.emptyTitle} hint={t.emptyHint} />
       ) : (
         <ServiceList
           items={items.map((s) => ({
