@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
+import { Illustration } from "@/components/illustrations/illustration";
 import { Logo } from "@/components/ui/logo";
 import { copy } from "@/lib/copy";
 
@@ -12,6 +13,7 @@ export default function OfflinePage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
       <Logo />
+      <Illustration kind="offline" className="max-w-xs [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)]" />
       <h1 className="text-xl font-semibold text-ink">{copy.pwa.offlineTitle}</h1>
       <p className="text-base text-ink-muted">{copy.pwa.offlineBody}</p>
       {/* A plain GET form, not a JS handler: this page is served from cache while offline, where its client chunks are not available.

@@ -2,6 +2,7 @@ import { CalendarDays, CircleCheck, Hourglass, MapPin, MessageCircle, Phone, Use
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Illustration, type IllustrationKind } from "@/components/illustrations/illustration";
 import { CancelPanel } from "@/components/booking/cancel-panel";
 import { Notice } from "@/components/public/notice";
 import { tLink } from "@/components/public/styles";
@@ -30,6 +31,16 @@ const STATUS: Record<string, { tone: "ok" | "wait" | "bad" | "off"; Icon: Lucide
   no_show: { tone: "bad", Icon: Ban },
   rejected: { tone: "bad", Icon: Ban },
   expired: { tone: "off", Icon: Hourglass },
+};
+
+const SCENE: Record<string, IllustrationKind> = {
+  confirmed: "confirmed",
+  completed: "confirmed",
+  pending: "pending",
+  expired: "pending",
+  cancelled: "cancelled",
+  no_show: "cancelled",
+  rejected: "cancelled",
 };
 
 const TONE = {
@@ -70,6 +81,10 @@ export default async function AppointmentPage({ params, searchParams }: PageProp
   return (
     <ThemeScope theme={b.theme}>
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 py-6 sm:py-12">
+        <div className="overflow-hidden rounded-[20px] border border-th-line">
+          <Illustration kind={SCENE[appointment.status] ?? "pending"} tone="theme" animated={active} />
+        </div>
+
         {justBooked ? (
           <Notice tone="success">
             <p className="text-base font-bold">{appointment.status === "pending" ? copy.public.done.pendingTitle : copy.public.done.confirmedTitle}</p>

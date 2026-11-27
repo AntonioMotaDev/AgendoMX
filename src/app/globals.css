@@ -103,3 +103,22 @@ body {
 [data-theme-biz] :focus-visible {
   outline-color: var(--t-text);
 }
+
+/* Illustration motion (src/components/illustrations). Only inside `.ill-anim`; off under reduced motion. */
+@keyframes ill-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ill-drift-a { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(16px); } }
+@keyframes ill-drift-b { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-16px); } }
+@keyframes ill-dash { to { stroke-dashoffset: -28; } }
+@keyframes ill-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes ill-draw { from { stroke-dashoffset: 40; } to { stroke-dashoffset: 0; } }
+@keyframes ill-pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.ill-anim .ill-float { animation: ill-float 6s ease-in-out infinite; }
+.ill-anim .ill-drift-a { animation: ill-drift-a 16s ease-in-out infinite; }
+.ill-anim .ill-drift-b { animation: ill-drift-b 18s ease-in-out infinite; }
+.ill-anim .ill-dash { animation: ill-dash 9s linear infinite; }
+.ill-anim .ill-pulse { animation: ill-pulse 3.2s ease-in-out infinite; }
+.ill-anim .ill-draw { animation: ill-draw 0.7s 0.35s ease-out both; }
+.ill-anim .ill-pop { animation: ill-pop 0.6s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .ill-anim *, .ill-anim { animation: none !important; }
+}

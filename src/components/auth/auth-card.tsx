@@ -13,7 +13,7 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
           </div>
           {/* Compact illustration for phones and tablets; the large panel takes over from lg. */}
           <div className="mb-6 overflow-hidden rounded-lg lg:hidden">
-            <Illustration kind="strip" className="max-h-24" />
+            <Illustration kind="strip" animated className="max-h-24" />
           </div>
           <div className="rounded-panel border border-line bg-surface p-6 sm:p-8">
             <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -29,7 +29,7 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
             agendo<span className="text-brand">mx</span>
           </span>
         </p>
-        <Illustration kind="hero" tone="dark" className="my-8" />
+        <Illustration kind="hero" tone="dark" animated className="my-8" />
         <div>
           <p className="text-3xl font-bold leading-tight tracking-tight">{copy.tagline}</p>
           <p className="mt-3 max-w-md text-base text-stone">{copy.auth.aside.body}</p>
