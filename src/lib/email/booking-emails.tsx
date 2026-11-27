@@ -37,7 +37,7 @@ export function sendClientBookingEmail(input: ClientEmailInput) {
   const url = `${appUrl()}/cita/${input.token}`;
   const location = [b.address, b.city].filter(Boolean).join(", ");
   const rows: BookingEmailProps["details"] = [
-    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone) },
+    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone), emphasis: true },
     ...(isSensitiveCategory(b.category) ? [] : [{ label: c.client.service, value: input.serviceName }]),
     ...(location ? [{ label: c.client.where, value: location }] : []),
   ];
@@ -57,6 +57,7 @@ export function sendClientBookingEmail(input: ClientEmailInput) {
         cta={c.client.cta}
         url={url}
         note={note}
+        hero={confirmed ? "confirmed" : "pending"}
       />
     ),
   });
@@ -81,7 +82,7 @@ export function sendOwnerBookingEmail(input: OwnerEmailInput) {
   const rows: BookingEmailProps["details"] = [
     { label: o.client, value: input.clientName },
     ...(input.clientPhone ? [{ label: o.phone, value: input.clientPhone }] : []),
-    { label: o.when, value: when },
+    { label: o.when, value: when, emphasis: true },
     { label: o.service, value: input.serviceName },
   ];
   const greeting = o.greeting(input.ownerName.trim().split(/\s+/)[0] || input.ownerName);
@@ -92,7 +93,7 @@ export function sendOwnerBookingEmail(input: OwnerEmailInput) {
     to: input.to,
     subject,
     text: plain(greeting, body, { rows }, o.cta, url),
-    react: <BookingEmail preview={preview} greeting={greeting} body={body} details={rows} cta={o.cta} url={url} />,
+    react: <BookingEmail preview={preview} greeting={greeting} body={body} details={rows} cta={o.cta} url={url} hero={input.kind === "new" ? "confirmed" : input.kind === "request" ? "pending" : "cancelled"} />,
   });
 }
 
@@ -111,7 +112,7 @@ export function sendClientStatusEmail(input: ClientStatusEmailInput) {
   const { business: b } = input;
   const url = `${appUrl()}/${b.slug}`;
   const rows: BookingEmailProps["details"] = [
-    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone) },
+    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone), emphasis: true },
     ...(isSensitiveCategory(b.category) ? [] : [{ label: c.client.service, value: input.serviceName }]),
   ];
   const greeting = c.client.greeting(input.clientName.trim().split(/\s+/)[0] || input.clientName);
@@ -121,7 +122,7 @@ export function sendClientStatusEmail(input: ClientStatusEmailInput) {
     to: input.to,
     subject: rejected ? s.rejectedSubject(b.name) : s.cancelledSubject(b.name),
     text: plain(greeting, body, { rows }, s.cta, url),
-    react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} />,
+    react: <BookingEmail preview={rejected ? s.rejectedPreview : s.cancelledPreview} greeting={greeting} body={body} details={rows} cta={s.cta} url={url} hero="cancelled" />,
   });
 }
 
@@ -141,7 +142,7 @@ export function sendReminderEmail(input: ReminderEmailInput) {
   const url = `${appUrl()}/cita/${input.token}`;
   const location = [b.address, b.city].filter(Boolean).join(", ");
   const rows: BookingEmailProps["details"] = [
-    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone) },
+    { label: c.client.when, value: formatInstantDateTime(input.startsAt, b.timezone), emphasis: true },
     ...(isSensitiveCategory(b.category) ? [] : [{ label: c.client.service, value: input.serviceName }]),
     ...(location ? [{ label: c.client.where, value: location }] : []),
   ];
@@ -152,6 +153,6 @@ export function sendReminderEmail(input: ReminderEmailInput) {
     to: input.to,
     subject: r.subject(b.name),
     text: plain(greeting, body, { rows }, r.cta, url, note),
-    react: <BookingEmail preview={r.preview} greeting={greeting} body={body} details={rows} cta={r.cta} url={url} note={note} />,
+    react: <BookingEmail preview={r.preview} greeting={greeting} body={body} details={rows} cta={r.cta} url={url} note={note} hero="reminder" />,
   });
 }

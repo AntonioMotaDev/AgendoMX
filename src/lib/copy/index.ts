@@ -19,6 +19,11 @@ export const copy = {
   panel: panelCopy,
   public: publicCopy,
   auth: {
+    // Large panel next to the forms (desktop and iPad landscape).
+    aside: {
+      label: "Sobre AgendoMX",
+      body: "Comparte tu página, deja que tus clientes reserven solos y mantén tu agenda en orden desde el celular.",
+    },
     common: {
       email: "Correo electrónico",
       password: "Contraseña",
@@ -111,6 +116,11 @@ export const copy = {
       expires: "El enlace es válido por 1 hora.",
     },
     footer: "AgendoMX de FORMA/01",
+    // Soft signature and footer of the HTML emails (docs/BRAND.md §14.3).
+    signatureLine: "Con cariño,",
+    signatureName: "el equipo de AgendoMX",
+    tagline: "Tu negocio. Tu tiempo. En orden.",
+    credit: "Diseñado y desarrollado por FORMA/01",
   },
   pwa: {
     name: "AgendoMX",

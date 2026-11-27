@@ -13,6 +13,7 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "assets",
   "ayuda",
   "blog",
+  "brand",
   "cita",
   "citas",
   "contacto",
