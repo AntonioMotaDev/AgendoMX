@@ -21,6 +21,7 @@ export function sendAuthEmail(kind: Kind, user: { name: string; email: string },
         url={url}
         expires={c.expires}
         ignore={c.ignore}
+        hero={kind === "verify" ? "verify" : "reset"}
       />
     ),
   });
