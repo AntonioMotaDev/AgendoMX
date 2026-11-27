@@ -237,7 +237,7 @@ export const panelCopy = {
     back: "Perfil",
     appearance: {
       title: "Apariencia",
-      subtitle: "Elige cómo se ve tu página para tus clientes. El tema se aplica a tu perfil, a la reserva y a la página de cada cita. Tu panel se queda igual.",
+      subtitle: "Elige cómo se ve tu página para tus clientes. El tema se aplica a tu perfil, a la reserva y a la página de cada cita. En tu panel solo cambia el color de acento y el encabezado.",
       invalid: "Elige uno de los temas disponibles.",
       groupLabel: "Temas disponibles",
       current: "Tema actual",

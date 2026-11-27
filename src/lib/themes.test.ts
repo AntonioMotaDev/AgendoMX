@@ -70,3 +70,29 @@ describe("theme contrast (AA)", () => {
     expect(ratio(t.danger!, t.bg!), "error text").toBeGreaterThanOrEqual(4.5);
   });
 });
+
+describe("panel accent (--pa) for the owner panel", () => {
+  // Panel surfaces are always the neutral light ones (globals.css :root).
+  const SURFACE = "#faf9f6";
+  const PAPER = "#f2efe7";
+  const noir = css.match(/\[data-panel-theme\]\[data-theme-biz="noir"\]\s*\{([^}]*)\}/)?.[1] ?? "";
+  const noirPa = Object.fromEntries([...noir.matchAll(/--pa(-[a-z]+)?:\s*(#[0-9a-f]{6})/g)].map((m) => [m[1] ?? "", m[2]!]));
+
+  function pa(id: (typeof THEME_IDS)[number]) {
+    if (id === "noir") return { accent: noirPa[""]!, on: noirPa["-on"]!, soft: noirPa["-soft"]! };
+    const t = tokens(id);
+    return { accent: t.primary!, on: t.onp!, soft: t.soft! };
+  }
+
+  it("keeps the color scheme light inside the panel, even for dark themes", () => {
+    expect(css).toMatch(/\[data-panel-theme\]\s*\{[^}]*color-scheme:\s*light/);
+  });
+
+  it.each(THEME_IDS)("%s: accent text, button label and icon-on-tint stay readable on the light panel", (id) => {
+    const { accent, on, soft } = pa(id);
+    expect(ratio(accent, SURFACE), "accent on surface").toBeGreaterThanOrEqual(4.5);
+    expect(ratio(accent, PAPER), "accent on paper").toBeGreaterThanOrEqual(4.5);
+    expect(ratio(on, accent), "label on accent").toBeGreaterThanOrEqual(4.5);
+    expect(ratio(accent, soft), "icon on tint").toBeGreaterThanOrEqual(3);
+  });
+});

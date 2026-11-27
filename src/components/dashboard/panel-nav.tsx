@@ -61,11 +61,11 @@ export function PanelNav({ business, publicHost }: Props) {
                   "relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold",
                   "sm:min-h-16 sm:rounded-2xl",
                   "lg:min-h-[46px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3.5 lg:text-sm",
-                  active ? "text-ink sm:bg-brand/15" : "text-ink-muted hover:text-ink",
+                  active ? "text-ink sm:bg-pa-soft" : "text-ink-muted hover:text-ink",
                 )}
               >
-                {active ? <span aria-hidden="true" className="absolute left-1/2 top-[-1px] h-[3px] w-7 -translate-x-1/2 rounded-b-sm bg-brand sm:hidden" /> : null}
-                <item.Icon aria-hidden="true" className={cn("h-6 w-6 lg:h-5 lg:w-5", active && "text-brand-ink")} />
+                {active ? <span aria-hidden="true" className="absolute left-1/2 top-[-1px] h-[3px] w-7 -translate-x-1/2 rounded-b-sm bg-pa sm:hidden" /> : null}
+                <item.Icon aria-hidden="true" className={cn("h-6 w-6 lg:h-5 lg:w-5", active && "text-pa")} />
                 {item.label}
               </Link>
             </li>

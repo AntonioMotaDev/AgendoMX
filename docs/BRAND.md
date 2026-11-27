@@ -8,7 +8,7 @@
 - **Color de acento:** terracota `#D76C52` (el del SVG). Los mockups muestran un naranja más intenso; el valor oficial en tokens es `#D76C52` hasta validar contraste AA con el texto en botones.
 - **Tipografía:** Plus Jakarta Sans (confirmada en los mockups). Cargar con `next/font` local.
 - **Iconografía:** Lucide, trazo lineal.
-- **Temas de negocio:** Studio, Noir, Bloom, Earth, Coast, Signal. En el MVP son predefinidos y solo afectan al perfil público y al flujo de reserva; el panel del dueño siempre usa la interfaz neutra de AgendoMX.
+- **Temas de negocio:** Studio, Noir, Bloom, Earth, Coast, Signal. En el MVP son predefinidos: visten el perfil público y el flujo de reserva por completo. El panel del dueño conserva la interfaz neutra de AgendoMX y solo toma del tema el acento (botón principal, navegación activa, "siguiente cita") y el encabezado con la portada del negocio. Login, registro y onboarding no usan tema.
 - **Tagline:** "Tu negocio. Tu tiempo. En orden."
 - **Firma:** "Diseñado y desarrollado por FORMA/01." solo en footer y páginas informativas.
 

@@ -59,6 +59,15 @@
   --t-primary: #14213d; --t-onp: #fffcf6; --t-accent: #f26b5b; --t-soft: #fce3a6; --t-cover: #fce3a6; --t-danger: #b3261e;
 }
 
+/*
+ * Owner panel accent. The panel keeps the neutral AgendoMX interface (paper/ink/line); only its
+ * accent and header follow the business theme. Panel surfaces are always light, so a theme whose
+ * primary is light (Noir's gold) gets a darker --pa. Outside a themed panel these fall back to terracotta.
+ */
+:root { --pa: var(--brand-ink); --pa-on: #ffffff; --pa-soft: #f1dcd4; }
+[data-panel-theme] { color-scheme: light; --pa: var(--t-primary); --pa-on: var(--t-onp); --pa-soft: var(--t-soft); }
+[data-panel-theme][data-theme-biz="noir"] { --pa: #7a5a22; --pa-on: #fffaf0; --pa-soft: #efe3cc; }
+
 @theme inline {
   --color-paper: var(--paper);
   --color-surface: var(--surface);
@@ -70,6 +79,9 @@
   --color-brand-ink: var(--brand-ink);
   --color-danger: var(--danger);
   --color-success: var(--success);
+  --color-pa: var(--pa);
+  --color-pa-on: var(--pa-on);
+  --color-pa-soft: var(--pa-soft);
   --color-th-bg: var(--t-bg);
   --color-th-surface: var(--t-surface);
   --color-th-text: var(--t-text);

@@ -71,7 +71,7 @@ export function AppointmentCard({ card, variant = "row", defaultOpen = false, is
 
   const details = (
     <div className="min-w-0">
-      {isNext && untilLabel ? <span className="mb-0.5 block text-xs font-bold text-brand-ink">{t.nextLabel(untilLabel)}</span> : null}
+      {isNext && untilLabel ? <span className="mb-0.5 block text-xs font-bold text-pa">{t.nextLabel(untilLabel)}</span> : null}
       <p className="text-base font-bold tracking-tight text-ink">{card.clientName}</p>
       <p className="text-sm text-ink-muted">
         {isRequest ? `${card.serviceName} · ${card.whenLabel}` : card.serviceName}
@@ -176,11 +176,11 @@ export function AppointmentCard({ card, variant = "row", defaultOpen = false, is
         <span
           className={cn(
             "absolute left-px top-4 h-3 w-3 rounded-full border-[3px] bg-paper",
-            isNext ? "border-brand bg-brand" : card.status === "confirmed" || card.status === "pending" ? "border-success" : card.status === "no_show" ? "border-danger" : "border-line bg-line",
+            isNext ? "border-pa bg-pa" : card.status === "confirmed" || card.status === "pending" ? "border-success" : card.status === "no_show" ? "border-danger" : "border-line bg-line",
           )}
         />
       </div>
-      <div className={cn("my-1.5 flex flex-col gap-3 rounded-2xl border p-3.5", isNext ? "border-brand/50 bg-brand/10" : closed ? "border-line bg-transparent" : "border-line bg-surface")}>
+      <div className={cn("my-1.5 flex flex-col gap-3 rounded-2xl border p-3.5", isNext ? "border-pa/50 bg-pa-soft/60" : closed ? "border-line bg-transparent" : "border-line bg-surface")}>
         {hasControls ? (
           <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex w-full items-start justify-between gap-3 text-left">
             {head}

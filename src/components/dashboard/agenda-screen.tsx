@@ -24,7 +24,7 @@ function Stat({ label, value, unit, accent = false }: { label: string; value: st
   return (
     <div className="min-w-0 px-3.5 py-3 not-first:border-l not-first:border-line">
       <span className="block whitespace-nowrap text-xs font-semibold text-ink-muted">{label}</span>
-      <b className={cn("mt-0.5 block text-2xl font-extrabold leading-tight tracking-tight tabular-nums lg:text-[28px]", accent && "text-brand-ink")}>{value}</b>
+      <b className={cn("mt-0.5 block text-2xl font-extrabold leading-tight tracking-tight tabular-nums lg:text-[28px]", accent && "text-pa")}>{value}</b>
       <span className="block truncate text-xs text-ink-muted">{unit}</span>
     </div>
   );
@@ -77,7 +77,7 @@ export async function AgendaScreen({ day }: { day: "today" | "tomorrow" }) {
             <h1 className="text-[22px] font-extrabold leading-tight tracking-tight lg:text-[26px]">{day === "today" ? t.todayTitle : t.tomorrowTitle}</h1>
           </div>
         </div>
-        <Link href="/app/citas/nueva" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-semibold text-surface hover:bg-ink/90">
+        <Link href="/app/citas/nueva" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-pa px-4 text-sm font-semibold text-pa-on hover:bg-pa/90">
           <Plus aria-hidden="true" className="h-[18px] w-[18px]" />
           {t.newAppointment}
         </Link>
